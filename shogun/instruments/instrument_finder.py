@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas import isnull
 from collections import deque
 from functools import partial
 from pandas import read_hdf
@@ -439,8 +440,8 @@ class InstrumentFinder(object):
             query = self._select_instruments_by_exchange_symbol(instrument_hdf, instruments)
             query.reset_index(level=[0], inplace=True)
             for index, row in query.iterrows():
-                #yield _convert_instrument_timestamp_fields(mkdict(row)) # We don't need this, hdf stores pandas object
-                yield mkdict(row)
+                yield _convert_instrument_timestamp_fields(mkdict(row)) # We don't need this, hdf stores pandas object
+                #yield mkdict(row)
 
     @staticmethod
     def _select_instruments_by_exchange_symbol(instrument_hdf, exchange_symbols):

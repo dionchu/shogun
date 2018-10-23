@@ -147,21 +147,21 @@ class ContractNode(object):
         self.prev = None
         self.next = None
 
-        def __rshift__(self, offset):
-            i = 0
-            curr = self
-            while i < offset and curr is not None:
-                curr = curr.next
-                i += 1
-            return curr
+    def __rshift__(self, offset):
+        i = 0
+        curr = self
+        while i < offset and curr is not None:
+            curr = curr.next
+            i += 1
+        return curr
 
-        def __lshift__(self, offset):
-            i = 0
-            curr = self
-            while i < offset and curr is not None:
-                curr = curr.prev
-                i += 1
-            return curr
+    def __lshift__(self, offset):
+        i = 0
+        curr = self
+        while i < offset and curr is not None:
+            curr = curr.prev
+            i += 1
+        return curr
 
 class OrderedContracts(object):
     """
@@ -243,7 +243,7 @@ class OrderedContracts(object):
         """
         curr = self._head_contract
         while curr.next is not None:
-            if curr.contract.auto_close_date > dt_value:
+            if curr.contract.auto_close_date.value > dt_value:
                 break
             curr = curr.next
         return curr.contract.exchange_symbol

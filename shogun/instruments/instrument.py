@@ -81,13 +81,13 @@ class Instrument(object):
     def exchange_timezone(self):
         return self.exchange_info.exchange_timezone
 
-    ## Quantopian has some equality checkers not implements here
+    ## Quantopian has some equality checkers not implemented here
 
     def __repr__(self):
-        if self.symbol:
-            return '%s(%s [%s])' % (type(self).__name__, self.symbol_id, self.instrument_name)
+        if self.exchange_symbol:
+            return '%s(%s [%s])' % (type(self).__name__, self.exchange_symbol, self.instrument_name)
         else:
-            return '%s(%s)' % (type(self).__name__, self.symbol_id
+            return '%s(%s)' % (type(self).__name__, self.exchange_symbol
             )
 
     ## Quantopian has some function used by pickle to determine how to serialize/deserialized this class
