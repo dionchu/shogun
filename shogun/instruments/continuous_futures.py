@@ -188,7 +188,7 @@ class OrderedContracts(object):
     """
 
     def __init__(self, root_symbol, contracts, active=True):
-        self._future_contract_listing = pd.read_csv(dirname + "\..\shogun_database\_FutureRootContractListingTable.csv")
+        self._future_contract_listing = pd.read_csv(dirname + "\..\database\_FutureRootContractListingTable.csv")
 
         self.root_symbol = root_symbol
 

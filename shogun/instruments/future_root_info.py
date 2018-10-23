@@ -1,5 +1,3 @@
-
-
 class FutureRootInfo(object):
     """A future root is a class of future contracts with the same contract
     specifications.

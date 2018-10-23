@@ -8,9 +8,9 @@ from trading_calendars.utils.memoize import lazyval
 from .financial_center_info import FinancialCenterInfo
 from .exchange_info import ExchangeInfo
 from .country_info import CountryInfo
-from .query_utils import group_into_chunks
-from .functional_utils import invert
-from .errors import (
+from shogun.utils.query_utils import group_into_chunks
+from shogun.utils.functional import invert
+from shogun.errors import (
     EquitiesNotFound,
     FutureContractsNotFound,
     SymbolsNotFound,
@@ -109,16 +109,16 @@ class InstrumentFinder(object):
     """
 
     def __init__(self):
-        self._country_code = pd.read_csv(dirname + "\..\shogun_database\_CountryCode.csv", keep_default_na=False)
-        self._asset_class = pd.read_csv(dirname + "\..\shogun_database\_AssetClass.csv")
-        self._currency_code = pd.read_csv(dirname + "\..\shogun_database\_CurrencyCode.csv")
-        self._exchange_code = pd.read_csv(dirname + "\..\shogun_database\_ExchangeCode.csv")
-        self._financial_center = pd.read_csv(dirname + "\..\shogun_database\_FinancialCenter.csv")
-        self._future_contract_listing = pd.read_csv(dirname + "\..\shogun_database\_FutureRootContractListingTable.csv")
-        self._future_root = pd.read_csv(dirname + "\..\shogun_database\_FutureRootTable.csv")
-        self._future_instrument = read_hdf(dirname + "\..\shogun_database\_FutureInstrument.h5")
+        self._country_code = pd.read_csv(dirname + "\..\database\_CountryCode.csv", keep_default_na=False)
+        self._asset_class = pd.read_csv(dirname + "\..\database\_AssetClass.csv")
+        self._currency_code = pd.read_csv(dirname + "\..\database\_CurrencyCode.csv")
+        self._exchange_code = pd.read_csv(dirname + "\..\database\_ExchangeCode.csv")
+        self._financial_center = pd.read_csv(dirname + "\..\database\_FinancialCenter.csv")
+        self._future_contract_listing = pd.read_csv(dirname + "\..\database\_FutureRootContractListingTable.csv")
+        self._future_root = pd.read_csv(dirname + "\..\database\_FutureRootTable.csv")
+        self._future_instrument = read_hdf(dirname + "\..\database\_FutureInstrument.h5")
         self._equity_instrument = pd.DataFrame()
-        self._instrument_router = read_hdf(dirname +'\..\shogun_database\_InstrumentRouter.h5')
+        self._instrument_router = read_hdf(dirname +'\..\database\_InstrumentRouter.h5')
         self._instrument_cache = {}
         self._instrument_type_cache = {}
         self._caches = (self._instrument_cache, self._instrument_type_cache)
