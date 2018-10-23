@@ -1,0 +1,11 @@
+base_currency_id,quote_currency_id,start_date,end_date
+EUR,USD,,
+USD,JPY,,
+GBP,USD,,
+USD,CHF,,
+AUD,USD,,
+USD,CAD,,
+NZD,USD,,
+USD,HKD,,
+USD,NOK,,
+USD,SEK,,

@@ -1,0 +1,74 @@
+root_symbol,instrument_name,underlying_name,exchange_id,exchange_alias,parent_calendar_id,child_calendar_id,underlying_asset_class_id,underlying_country_id,quote_currency_id,multiplier,tick_size,average_pricing,settle_start,settle_end,settle_method,settle_timezone,deliverable,final_settle_method,final_settle_start,final_settle_end,final_settle_timezone,last_trade_time,auto_close_date
+YT,3y Treasury Bond,AU 3 Year Treasury Bond,XASX,ASX,XASX,,1,AU,AUD,1000,0.005,,16:10,16:12,cspa,exch,0,Basket Mid,"9:45, 10:30",11:15,exch,12:00,volume_switch_date
+XT,10y Treasury Bond,AU 10 Year Treasury Bond,XASX,ASX,XASX,,1,AU,AUD,1000,0.005,,16:10,16:12,cspa,exch,0,Basket Mid,"9:45, 10:30",11:15,exch,12:00,volume_switch_date
+JGBM,5y JGB,5 Year JGB Benchmark 4 Year to 5.25 Year,XJPX,OSE,XJPX,,1,JP,JPY,1000000,0.01,,15:00,15:02,cspa,exch,1,Delivery,,,exch,15:02,volume_switch_date
+JGBL,10y JGB,10 Year JGB Benchmark 7 Year to 11 Year,XJPX,OSE,XJPX,,1,JP,JPY,1000000,0.01,,15:00,15:02,cspa,exch,1,Delivery,,,exch,15:02,
+JGBLM,Mini 10y JGB,10 Year JGB Benchmark 7 Year to 11 Year,XJPX,OSE,XJPX,,1,JP,JPY,100000,0.005,,15:00,15:02,cspa,exch,0,JGB settle,,,exch,15:02,
+JGBSL,20y JGB,20 Year JGB Benchmark 19.25 Year to 21 Year,XJPX,OSE,XJPX,,1,JP,JPY,1000000,0.01,,15:00,15:02,cspa,exch,1,Delivery,,,exch,15:02,
+FBTM,Medium BTP,4.5 Year to 6 Year Italian Government Bond,XEUR,EUREX,XEUR,EUBANK,1,IT,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FBTP,Long BTP,8.5 Year to 11 Year Italian Government Bond,XEUR,EUREX,XEUR,EUBANK,1,IT,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FBTS,Short BTP,2 Year to 3.25 Year Short Term Italian Government Debt,XEUR,EUREX,XEUR,EUBANK,1,IT,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FGBS,Euro Schatz 2y,1.75 Year to 2.25 Year German Federal Government Debt,XEUR,EUREX,XEUR,EUBANK,1,DE,EUR,1000,0.005,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FGBM,Euro Bobl 5y,4.5 Year to 5.5 Year German Federal Government Debt,XEUR,EUREX,XEUR,EUBANK,1,DE,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FGBL,Euro Bund 10y,8.5 Year to 1.5 Year German Federal Government Bond,XEUR,EUREX,XEUR,EUBANK,1,DE,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FGBX,Euro Buxl 30y,24 Year to 30 Year German Federal Government Bond,XEUR,EUREX,XEUR,EUBANK,1,DE,EUR,1000,0.02,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FOAM,Mid Term OAT,4.5 Year to 5.5 Year French Republic Government Bond,XEUR,EUREX,XEUR,EUBANK,1,FR,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+FOAT,Long Term OAT,8.5 Year to10.5 Year French Republic Government Bond,XEUR,EUREX,XEUR,EUBANK,1,FR,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
+H,Medium Gilt,4 Year to 6.25 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,first_notice
+R,Long Gilt,8.75 Year to 13 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,first_notice
+UB,Ultra Treasury Bond,25 Year to 30 Year US Treasury Bonds,XCME,CBOT,XCME,,1,US,USD,1000,0.03125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
+ZB,30y Treasury Bond,15 Year to 25 Year US Treasury Bonds,XCME,CBOT,XCME,,1,US,USD,1000,0.03125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
+ZN,10y Treasury Note,6.5 Year to 10 Year US Treasury Note,XCME,CBOT,XCME,,1,US,USD,1000,0.015625,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
+ZF,5y Treasury Note,4 Year 2 Month to 5 Year US Treasury Note,XCME,CBOT,XCME,,1,US,USD,1000,0.0078125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
+ZT,2y Treasury Note,1.75 Year to 5.25 Year US Treasury Note,XCME,CBOT,XCME,,1,US,USD,2000,0.0078125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
+CGB,10y Government Bonds,8 Year to 10.5 Year Government of Canada Bonds,XMOD,MX,XMOD,IRD,1,CA,CAD,1000,0.01,,14:59,15:00,vwap,exch,1,Delivery,12:59,13:00,exch,13:00,first_notice
+CGF,5y Government Bonds,4.25 Year to 5.25 Year Government of Canada Bonds,XMOD,MX,XMOD,IRD,1,CA,CAD,1000,0.01,,14:59,15:00,vwap,exch,1,Delivery,12:59,13:00,exch,13:00,first_notice
+BZ,Brent Crude,ICE Brent Index,XNYM,NYMEX,XNYM,,3,GB,USD,1000,0.01,,19:28,19:30,vwap,London,0,ICE Brent Index,19:30 (London),19:30 (London),exch,19:30 (London),
+CL,Light Crude,Light Sweet Crude Oil,XNYM,NYMEX,XNYM,,3,US,USD,1000,0.01,,14:28,14:30,vwap,exch,1,vwap,14:00,14:30,exch,14:30,
+QM,Miny crude oil,CL Floating Price,XNYM,NYMEX,XNYM,,3,US,USD,500,0.025,,14:28,14:30,CL settle,exch,0,CL settle,14:00,14:30,exch,14:30,
+GC,Gold,100 Troy Oz. Gold 995 fineness,XNYM,NYMEX,XNYM,,4,US,USD,100,0.1,,13:29,13:30,vwap,exch,1,vwap,13:15,13:30,exch,12:30,first_position
+QO,Mini Gold,GC Floating Price,XNYM,NYMEX,XNYM,,4,US,USD,50,0.25,,13:29,13:30,GC settle,exch,0,GC settle,13:15,13:30,exch,13:30,
+SI,Silver,5000 Troy Oz. Silver 999 fineness,XNYM,NYMEX,XNYM,,4,US,USD,5000,0.005,,13:24,13:25,vwap,exch,1,vwap,13:10,13:25,exch,12:25,first_position
+QI,Mini Silver,SI Floating Price,XNYM,NYMEX,XNYM,,4,US,USD,2500,0.0125,,13:24,13:25,SI settle,exch,0,SI settle,13:10,13:25,exch,13:25,
+HG,Copper,25000 Lbs. Grade 1 Electrolytic Copper Cathodes,XNYM,NYMEX,XNYM,,4,US,USD,25000,0.0005,,12:59,13:00,vwap,exch,1,vwap,12:30,13:00,exch,12:00,first_position
+QC,Miny Copper,HG Floating Price,XNYM,NYMEX,XNYM,,4,US,USD,12500,0.002,,12:59,13:00,HG settle,exch,0,HG settle,12:30,13:00,exch,13:00,
+NG,Natural Gas,10000 mmBtu Natural Gas,XNYM,NYMEX,XNYM,,3,US,USD,10000,0.001,,14:28,14:30,vwap,exch,1,vwap,14:00,14:30,exch,14:30,
+QG,Miny Natural Gas,NG Floating Price,XNYM,NYMEX,XNYM,,3,US,USD,2500,0.005,,14:28,14:30,NG settle,exch,0,NG settle,14:28,14:30,exch,14:30,
+RB,RBOB,42000 Gallons Reformulated Gasoline Blendstock NY Harbor,XNYM,NYMEX,XNYM,,3,US,USD,42000,0.0001,,14:28,14:30,vwap,exch,1,vwap,14:00,14:30,exch,14:30,
+QU,Miny rbob,RB Floating Price,XNYM,NYMEX,XNYM,,3,US,USD,21000,0.001,,14:28,14:30,RB settle,exch,0,RB settle,14:28,14:30,exch,14:30,
+AM,ASX Mini SPI 200 Index,ASX SPI 200 Index,XASX,ASX,XASX,,5,AU,AUD,5,1,,16:10,16:12,cspa,exch,0,SOQ,9:30,9:30,exch,12:00,
+AP,ASX SPI 200 Index,ASX SPI 200 Index,XASX,ASX,XASX,,5,AU,AUD,25,1,,16:10,16:12,cspa,exch,0,SOQ,9:30,9:30,exch,12:00,
+MHI,Mini Hang Seng Index,Hang Seng Index,XHKF,HKFE,XHKF,,5,HK,HKD,10,1,,16:30,16:30,market price at close,exch,0,"vwap(start+5,end-5)",9:30,16:10,exch,16:00,
+HSI,Hang Seng Index,Hang Seng Index,XHKF,HKFE,XHKF,,5,HK,HKD,50,1,,16:30,16:30,market price at close,exch,0,"vwap(start+5,end-5)",9:30,16:10,exch,16:00,
+N225,Nikkei 225,NIKKEI 225 Stock Average,XJPX,OSE,XJPX,,5,JP,JPY,1000,10,,15:10,15:15,cspa,exch,0,SOQ,9:00,9:00,exch,9:00,
+N225M,Nikkei 225 Mini,NIKKEI 225 Stock Average,XJPX,OSE,XJPX,,5,JP,JPY,100,5,,15:10,15:15,cspa,exch,0,SOQ,9:00,9:00,exch,9:00,
+FDAX,DAX 30 Index,DAX Index,XEUR,EUREX,XEUR,XFRA,5,DE,EUR,25,0.5,,17:29,17:30,vwap,exch,0,Xetra Intraday Auction,13:00,13:05,exch,13:00,
+FDXM,DAX 30 Index Mini,DAX Index,XEUR,EUREX,XEUR,XFRA,5,DE,EUR,5,1,,17:29,17:30,vwap,exch,0,Xetra Intraday Auction,13:00,13:05,exch,13:00,
+FTMIB,FTSE MIB Index,FTSE MIB,XMIL,MI,XMIL,,5,IT,EUR,5,5,,17:38,17:38,vwap last 5%,exch,0,SOQ,9:00,9:00,exch,9:05,
+BXF,BEL 20 Index,BEL 20,XBRU,ENX_Brussels,XBRU,,5,BE,EUR,10,0.5,,17:30,17:35,cspa,exch,0,EDSP (twap),15:40,16:00,exch,16:00,
+FCE,CAC 40 Index,CAC 40,XPAR,ENX_Paris,XPAR,,5,FR,EUR,10,0.5,,17:30,17:35,cspa,exch,0,EDSP (twap),15:40,16:00,exch,16:00,
+OBX,OBX Index,OBX Index,XOSL,OSE,XOSL,,5,NO,NOK,100,0.25,,16:20,16:25,cspa,exch,0,vwap,9:00,16:20,exch,16:20,
+MIX,IBEX 35 mini,IBEX 35 Index,BMEX,MEFF,BMEX,,5,ES,EUR,1,1,,17:29,17:30,vwap,exch,0,IBEX 35 twap,16:15,16:45,exch,16:15,
+IBX,IBEX 35 Index,IBEX 35 Index,BMEX,MEFF,BMEX,,5,ES,EUR,10,1,,17:29,17:30,vwap,exch,0,IBEX 35 twap,16:15,16:45,exch,16:15,
+OMXS30,OMX Index,OMXS30 Index,XSTO,OMX,XSTO,,5,SE,SEK,100,0.25,,17:25,17:28,cspa,exch,0,OMXS30 vwap,9:00,17:00,exch,,
+FSMI,Swiss Market Index,Swiss Market Index (SMI) ,XEUR,EUREX,XEUR,XSWX,5,CH,CHF,10,1,,17:19,17:20,vwap,exch,0,SOQ,9:00,9:00,exch,9:00,
+Z,FTSE 100 Index,FTSE 100 Index,IFEU,ICE,IFEU,XLON,5,GB,GBP,10,0.5,,16:30,16:45,vwap,exch,0,LSE Intraday Auction,10:10,10:15,exch,10:15,
+FMRU,MSCI Russia Index,MSCI Russia Index,XEUR,EUREX,XEUR,MISX,5,RU,USD,50,0.1,,17:29,17:30,vwap,exch,0,Closing Value of Index,14:45,14:45,exch,22:00,
+ID,MSCI Indonesia Index,MSCI Indonesia Index,XSES,SGX,XSES,,5,ID,USD,2,5,,17:25,17:30,cspa,exch,0,ISE Closing Auction,15:50,16:00,exch,17:25,
+MY,MSCI Malaysia Index,MSCI Malaysia Index,XSES,SGX,XSES,,5,MY,USD,20,0.25,,17:29,17:30,cspa,exch,0,BM 1hour twap,16:00,17:00,exch,17:25,
+TH,MSCI Thailand Index,MSCI Thailand Index,XSES,SGX,XSES,,5,TH,USD,20,0.25,,18:05,18:10,cspa,exch,0,SET 15 min twap + close,16:15,16:30,exch,18:05,
+IN,CNX Nifty Index,CNX Nifty Index,XSES,SGX,XSES,,5,IN,USD,2,0.5,,18:10,18:15,cspa,exch,0,NSE Closing Auction,15:40,16:00,exch,18:10,
+TW,MSCI Taiwan Index,MSCI Taiwan Index,XSES,SGX,XSES,,5,TW,USD,100,0.1,,13:45,13:50,cspa,exch,0,TWSE 30min twap,13:00,13:30,exch,13:45,
+CN,FTSE Xinhua China A50,FTSE China A50 Index,XSES,SGX,XSES,,5,CN,USD,1,2.5,,16:30,16:35,cspa,exch,0,SSE close,14:57,15:00,exch,16:30,
+YM,Mini DJI,Dow Jones Industrial Average,XCME,CBOT,XCME,,5,US,USD,5,1,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,
+SP,S&P 500,S&P 500 Index,XCME,CME,XCME,,5,US,USD,250,0.1,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,16:15,
+ES,E-mini S&P 500,S&P 500 Index,XCME,CME,XCME,,5,US,USD,50,0.25,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,
+SXM,Mini TSX Index,TSX Index,XMOD,MX,XMOD,EQD,5,CA,CAD,50,0.1,,15:59,16:00,vwap,exch,0,Opening Price,9:30,9:30,exch,9:30,
+SXF,TSX Index,TSX Index,XMOD,MX,XMOD,EQD,5,CA,CAD,200,0.1,,15:59,16:00,vwap,exch,0,Opening Price,9:30,9:30,exch,9:30,
+IR,90 Day Bills,Australia 90 Day Bank Bill,XASX,ASX,XASX,,2,AU,AUD,2400,0.01,,16:10,16:12,cspa,exch,1,Delivery,10:00,10:00,exch,12:00,
+FEU3,3 Month EURIBOR Interest Rate,3 Month EURIBOR Interest Rate,XEUR,EUREX,XEUR,EUBANK,2,EU,EUR,2500,0.005,,17:14,17:15,vwap,exch,0,EMMI Euribor Rate,11:00,11:00,exch,11:00,
+I,3 Month EURIBOR Interest Rate,3 Month EURIBOR Interest Rate,IFEU,ICE,IFEU,,2,EU,EUR,2500,0.005,,16:00,16:15,vwap,exch,0,EMMI Euribor Rate,10:00,10:00,exch,10:00,
+S,3 Month Euro Swiss Interest Rate,3 Month Euro Swiss Interest Rate,IFEU,ICE,IFEU,,2,CH,CHF,2500,0.01,,16:00,16:15,vwap,exch,0,Swiss Franc ICE LIBOR,11:00,11:00,exch,11:00,
+L,3 Month Sterling Interest Rate ,3 Month Sterling Interest Rate ,IFEU,ICE,IFEU,,2,GB,GBP,1250,0.01,,16:09,16:24,vwap,exch,0,ICE LIBOR,11:00,11:00,exch,11:00,
+GE,Globex Eurodollar,3 Month Eurodollar Interest Rate,XCME,CME,XCME,,2,US,USD,2500,0.0025,,13:59,14:00,vwap,exch,0,IBA LIBOR FIXING,11:00,11:00,London,11:00,
+BAX,3 Month Canadian Banker's Acceptance Futures,3 Month Canadian Banker's Acceptance,XMOD,MX,XMOD,IRD,2,CA,CAD,2500,0.005,,14:57,15:00,vwap,exch,0,3mo CDOR,10:15,10:15,exch,10:15,

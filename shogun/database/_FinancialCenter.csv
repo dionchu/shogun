@@ -1,0 +1,40 @@
+financial_center,country_id,timezone
+Johannesburg,South Africa,Africa/Johannesburg
+Hong_Kong,Hong Kong,Asia/Hong_Kong
+Singapore,Singapore,Asia/Singapore
+Tokyo,Japan,Asia/Tokyo
+Shanghai,China,Asia/Shanghai
+Shenzhen,China,Asia/Shanghai
+Mumbai,India,Asia/Calcutta
+Seoul,Korea,Asia/Seoul
+Taipei,Taiwan,Asia/Taipei
+Dalian,China,Asia/Shanghai
+Jakarta,Indonesia,Asia/Jakarta
+Kuala_Lumpur,Malaysia,Asia/Kuala_Lumpur
+Bangkok,Thailand,Asia/Bangkok
+Manila,Philippines,Asia/Manila
+Zhengzhou,China,Asia/Shanghai
+Brussels,Belgium,Europe/Brussels
+Frankfurt,Germany,Europe/Frankfurt
+London,United Kingdom,Europe/London
+Madrid,Spain,Europe/Madrid
+Oslo,Norway,Europe/Oslo
+Paris,France,Europe/Paris
+Rome,Italy,Europe/Rome
+Stockholm,Sweden,Europe/Stockholm
+Amsterdam,Netherlands,Europe/Amsterdam
+Lisbon,Portugal,Europe/Lisbon
+Dublin,Ireland,Europe/Dublin
+Milan,Italy,Europe/Rome
+Zurich,Switzerland,Europe/Zurich
+Copenhagen,Denmark,Europe/Copenhagen
+Helsinki,Finland,Europe/Helsinki
+Moscow,Russia,Europe/Moscow
+Chicago,United States,America/Chicago
+Montreal,Canada,America/Montreal
+New_York,United States,America/New_York
+Toronto,Canada,America/Toronto
+Mexico_City,Mexico,America/Mexico_City
+Kansas_City,United States,America/Chicago
+Sydney,Australia,Australia/Sydney
+Sao Paulo,Brazil,America/Sao_Paulo
