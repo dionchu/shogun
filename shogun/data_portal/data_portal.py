@@ -1,14 +1,23 @@
 import numpy as np
-from .errors import HistoryWindowStartsBeforeData
+from shogun.utils.errors import HistoryWindowStartsBeforeData
 from shogun.utils.memoize import remember_last, weak_lru_cache
 
 from shogun.data_portal.history_loader import (
     DailyHistoryLoader,
-    MinuteHistoryLoader,
 )
 from shogun.instruments.roll_finder import (
     CalendarRollFinder,
     VolumeRollFinder
+)
+from shogun.data_portal.continuous_future_reader import (
+    ContinuousFutureSessionBarReader,
+)
+from shogun.instruments.roll_finder import (
+    CalendarRollFinder,
+    VolumeRollFinder
+)
+from shogun.data_portal.resample import (
+    ReindexSessionBarReader,
 )
 
 OHLCVPOI_FIELDS = frozenset([
@@ -61,6 +70,7 @@ class DataPortal(object):
 
     def __init__(self,
                  instrument_finder,
+                 trading_calendar,
                  first_trading_day,
                  equity_daily_reader=None,
                  future_daily_reader=None,
@@ -90,19 +100,54 @@ class DataPortal(object):
             else:
                 self._last_available_session = None
 
-        if last_available_minute:
-            self._last_available_minute = last_available_minute
-        else:
-            # Infer the last minute from the provided readers.
-            last_minutes = [
-                reader.last_available_dt
-                for reader in [equity_minute_reader, future_minute_reader]
-                if reader is not None
-            ]
-            if last_minutes:
-                self._last_available_minute = max(last_minutes)
-            else:
-                self._last_available_minute = None
+        aligned_session_readers = {}
+
+        aligned_equity_session_reader = self._ensure_reader_aligned(
+            equity_daily_reader)
+
+        aligned_future_session_reader = self._ensure_reader_aligned(
+            future_daily_reader)
+
+        self._roll_finders = {
+            'calendar': CalendarRollFinder(self.trading_calendar,
+                                           self.instrument_finder),
+        }
+
+        if aligned_equity_session_reader is not None:
+            aligned_session_readers[Equity] = aligned_equity_session_reader
+
+        if aligned_future_session_reader is not None:
+            aligned_session_readers[Future] = aligned_future_session_reader
+            self._roll_finders['volume'] = VolumeRollFinder(
+                self.trading_calendar,
+                self.instrument_finder,
+                aligned_future_session_reader,
+            )
+            aligned_session_readers[ContinuousFuture] = \
+                ContinuousFutureSessionBarReader(
+                    aligned_future_session_reader,
+                    self._roll_finders,
+                )
+
+        _dispatch_session_reader = InstrumentDispatchSessionBarReader(
+            self.trading_calendar,
+            self.instrument_finder,
+            aligned_session_readers,
+            self._last_available_session,
+        )
+
+        self._pricing_readers = {
+            'daily': _dispatch_session_reader,
+        }
+
+        self._history_loader = DailyHistoryLoader(
+            self.trading_calendar,
+            _dispatch_session_reader,
+            self._adjustment_reader,
+            self.instrument_finder,
+            self._roll_finders,
+            prefetch_length=daily_history_prefetch_length,
+        )
 
         self._first_trading_day = first_trading_day
 
@@ -112,43 +157,12 @@ class DataPortal(object):
             if self._first_trading_day is not None else None
         )
 
-        self._roll_finders = {
-            'calendar': CalendarRollFinder(self.trading_calendar,
-                                           self.instrument_finder),
-        }
-
-        aligned_minute_readers = {}
-        aligned_session_readers = {}
-
-        self._history_loader = DailyHistoryLoader(
-            self.trading_calendar,
-            _dispatch_session_rader,
-            self._adjustment_reader,
-            self.instrument_finder,
-            self._roll_finders,
-            prefetch_length=daily_history_prefetch_length,
-        )
-
-        _dispatch_session_reader = AssetDispatchSessionBarReader(
-            self.trading_calendar,
-            self.instrument_finder,
-            aligned_session_readers,
-            self._last_available_session,
-        )
-
     def _ensure_reader_aligned(self, reader):
         if reader is None:
             return
 
         if reader.trading_calendar.name == self.trading_calendar.name:
             return reader
-        elif reader.data_frequency == 'minute':
-            return ReindexMinuteBarReader(
-                self.trading_calendar,
-                reader,
-                self._first_available_session,
-                self._last_available_session
-            )
         elif reader.data_frequency == 'session':
             return ReindexSessionBarReader(
                 self.trading_calendar,
@@ -156,6 +170,29 @@ class DataPortal(object):
                 self._first_available_session,
                 self._last_available_session
             )
+
+    def get_last_traded_dt(self, instrument, dt, data_frequency):
+        """
+        Given an instrument and dt, returns the last traded dt from the viewpoint
+        of the given dt.
+        If there is a trade on the dt, the answer is dt provided.
+        """
+        return self._get_pricing_reader(data_frequency).get_last_traded_dt(
+            instrument, dt)
+
+        @staticmethod
+
+    def _is_extra_source(instrument, field, map):
+        """
+        Internal method that determines if this asset/field combination
+        represents a fetcher value or a regular OHLCVP lookup.
+        """
+        # If we have an extra source with a column called "price", only look
+        # at it if it's on something like palladium and not AAPL (since our
+        # own price data always wins when dealing with instruments).
+
+        return not (field in BASE_FIELDS and
+                    (isinstance(instrument, (Instrument, ContinuousFuture))))
 
     def get_history_window(self,
                            instruments,
@@ -215,16 +252,60 @@ class DataPortal(object):
 
         # forward-fill price
         if field == "price":
-                if frequency =="1m":
-                    ffill_data_frequency = 'minute'
-                elif frequency = "1d":
-                    ffill_data_frequency = 'daily'
+            if frequency =="1m":
+                ffill_data_frequency = 'minute'
+            elif frequency = "1d":
+                ffill_data_frequency = 'daily'
+            else:
+                raise Exception(
+                        "Only 1d and 1m are supported for forward-filling.")
+
+            instruments_with_leading_nan = np.where(isnull(df.iloc[0]))[0]
+
+            history_start, history_end = df.index[[0, -1]]
+            if ffill_data_frequency == 'daily' and data_frequency == 'minute'
+                # When we're looking for a daily value, but we haven't seen any
+                # volume in today's minute bars yet, we need to use the
+                # previous day's ffilled daily price. Using today's daily price
+                # could yield a value from later today.
+                history_start -= self.trading_calendar.day
+
+            initial_values = []
+            for instrument in df.columns[instruments_with_leading_nan]:
+                last_traded = self.get_last_traded_dt(
+                    instrument,
+                    history_start,
+                    ffill_data_frequency,
+                )
+                if isnull(last_traded):
+                    initial_values.append(nan)
                 else:
-                    raise Exception(
-                            "Only 1d and 1m are supported for forward-filling.")
+                    initial_values.append(
+                        self.get_adjusted_value(
+                            instrument,
+                            field,
+                            dt=last_traded,
+                            perspective_dt=history_end,
+                            data_frequency=ffill_data_frequency,
+                        )
+                    )
+            # Set leading values for assets that were missing data, then ffill.
+            df.ix[0, instruments_with_leading_nan] = np.array(
+                initial_values,
+                dtype=np.float64
+            )
+            df.fillna(method='ffill', inplace=True)
 
-                instruments_with_leading_nan = np.where(isnull(df.iloc[0]))[0]
-
+            # forward-filling will incorrectly produce values after the end of
+            # an asset's lifetime, so write NaNs back over the asset's
+            # end_date.
+            normed_index = df.index.normalize()
+            for instrument in df.columns:
+                if history_end >= instrument.end_date:
+                    # if the window extends past the instrument's end date, set
+                    # all post-end-date values to NaN in that instrument's series
+                    df.loc[normed_index > instrument.end_date, instrument] = nan
+        return df
 
     def _get_history_daily_window(self,
                                   instruments,
@@ -271,12 +352,15 @@ class DataPortal(object):
                 extra_slot=False
             )
         else:
-            # minute mode, requesting '1d'
+            # not supported yet
             daily_data = self._get_daily_window_data(
                 instruments,
                 field_to_use,
-                days_for_window[0:-1]
+                days_for_window
+#                days_for_window[0:-1]
             )
+            # bunch of stuff missing here
+            return daily_data
 
     @remember_last
     def _get_days_for_window(self, end_date, bar_count):
@@ -305,7 +389,7 @@ class DataPortal(object):
         Parameters
         ----------
         instrument : Instrument
-            The asset whose data is desired.
+            The instrument whose data is desired.
         start_dt: pandas.Timestamp
             The start of the desired window of data.
         bar_count: int
@@ -331,7 +415,7 @@ class DataPortal(object):
         else:
             return_array = np.zeros((bar_count, len(instruments)), dtype=dtype)
 
-        if field != "volume":
+        if field != "volume" or field != "open_interest":
             # volumes default to 0, so we don't need to put NaNs in the array
             return_array[:] = np.NaN
 
@@ -345,3 +429,16 @@ class DataPortal(object):
             else:
                 return_array[:len(data)] = data
         return return_array
+
+    def _get_current_contract(self, continuous_future, dt):
+        rf = self._roll_finders[continuous_future.roll_style]
+        contract_exchange_symbol = rf.get_contract_center(continuous_future.root_symbol,
+                                              dt,
+                                              continuous_future.offset)
+        if contract_exchange_symbol is None:
+            return None
+        return self.instrument_finder.retrieve_instrument(contract_exchange_symbol)
+
+    @property
+    def adjustment_reader(self):
+        return self._adjustment_reader
