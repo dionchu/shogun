@@ -1,4 +1,4 @@
-exchange_symbols#
+#
 # Copyright 2016 Quantopian, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,7 @@ from numpy import (
     zeros
 )
 from six import iteritems, with_metaclass
+from itertools import chain
 
 from shogun.utils.memoize import lazyval
 
@@ -104,7 +105,9 @@ class InstrumentDispatchBarReader(with_metaclass(ABCMeta)):
         exchange_symbol_groups = {t: [] for t in instrument_types}
         out_pos = {t: [] for t in instrument_types}
 
-        instruments = self._instrument_finder.retrieve_all(exchange_symbols)
+        instruments = [t for t in exchange_symbols if not isinstance(t, str)]
+        if len([t for t in exchange_symbols if isinstance(t, str)]):
+            instruments = list(chain(instruments, self._instrument_finder.retrieve_all([t for t in exchange_symbols if isinstance(t, str)])))
 
         for i, instrument in enumerate(instruments):
             t = type(instrument)

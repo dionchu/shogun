@@ -316,27 +316,25 @@ class HistoryLoader(with_metaclass(ABCMeta)):
     FIELDS = ('open', 'high', 'low', 'close', 'volume', 'exchange_symbol')
 
     def __init__(self, trading_calendar, reader, equity_adjustment_reader,
-                 future_adjustment_reader,
                  instrument_finder,
-                 roll_finders=None,
+                 roll_finders,
                  exchange_symbol_cache_size=1000,
                  prefetch_length=0):
         self.trading_calendar = trading_calendar
         self._instrument_finder = instrument_finder
         self._reader = reader
         self._adjustment_readers = {}
-        self._adjustment_readers[ContinuousFuture] = future_adjustment_reader
-#        if equity_adjustment_reader is not None:
-#            self._adjustment_readers[Equity] = \
-#                HistoryCompatibleUSEquityAdjustmentReader(
-#                    equity_adjustment_reader)
-#        if roll_finders:
-#            self._adjustment_readers[ContinuousFuture] =\
-#                ContinuousFutureAdjustmentReader(trading_calendar,
-#                                                 instrument_finder,
-#                                                 reader,
-#                                                 roll_finders,
-#                                                 self._frequency)
+        if equity_adjustment_reader is not None:
+            self._adjustment_readers[Equity] = \
+                HistoryCompatibleUSEquityAdjustmentReader(
+                    equity_adjustment_reader)
+        if roll_finders:
+            self._adjustment_readers[ContinuousFuture] =\
+                ContinuousFutureAdjustmentReader(trading_calendar,
+                                                 instrument_finder,
+                                                 reader,
+                                                 roll_finders,
+                                                 self._frequency)
         self._window_blocks = {
             field: ExpiringCache(LRU(exchange_symbol_cache_size))
             for field in self.FIELDS

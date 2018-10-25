@@ -2,8 +2,10 @@ import pandas as pd
 from pandas import isnull
 from collections import deque
 from functools import partial
+from abc import ABCMeta
+from numbers import Integral
 from pandas import read_hdf
-from six import viewkeys
+from six import with_metaclass, string_types, viewkeys
 from toolz import ( curry, )
 from trading_calendars.utils.memoize import lazyval
 from .financial_center_info import FinancialCenterInfo
@@ -448,3 +450,33 @@ class InstrumentFinder(object):
         return instrument_hdf[
             instrument_hdf.index.isin(exchange_symbols)
             ]
+
+class InstrumentConvertible(with_metaclass(ABCMeta)):
+    """
+    ABC for types that are convertible to integer-representations of
+    Instruments.
+    Includes Instrument, six.string_types, and Integral
+    """
+    pass
+
+
+InstrumentConvertible.register(Integral)
+InstrumentConvertible.register(Instrument)
+# Use six.string_types for Python2/3 compatibility
+for _type in string_types:
+    InstrumentConvertible.register(_type)
+
+class NotInstrumentConvertible(ValueError):
+    pass
+
+
+class PricingDataAssociable(with_metaclass(ABCMeta)):
+    """
+    ABC for types that can be associated with pricing data.
+    Includes Instrument, Future, ContinuousFuture
+    """
+    pass
+
+PricingDataAssociable.register(Instrument)
+PricingDataAssociable.register(Future)
+PricingDataAssociable.register(ContinuousFuture)

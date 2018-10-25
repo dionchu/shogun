@@ -1,5 +1,6 @@
 from trading_calendars import get_calendar
 
+
 class Instrument(object):
     """
     An Instrument represents the metadata of a symbol

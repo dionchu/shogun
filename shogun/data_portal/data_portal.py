@@ -1,13 +1,22 @@
+import pandas as pd
 import numpy as np
-from shogun.utils.errors import HistoryWindowStartsBeforeData
+from numpy import float64, int64, nan
+from shogun.errors import HistoryWindowStartsBeforeData
 from shogun.utils.memoize import remember_last, weak_lru_cache
 
+from shogun.instruments.instrument import (
+    Instrument,
+    Equity,
+    Future,
+)
+from shogun.instruments.continuous_futures import ContinuousFuture
+from shogun.instruments.instrument_finder import (
+    InstrumentFinder,
+    InstrumentConvertible,
+    PricingDataAssociable,
+)
 from shogun.data_portal.history_loader import (
     DailyHistoryLoader,
-)
-from shogun.instruments.roll_finder import (
-    CalendarRollFinder,
-    VolumeRollFinder
 )
 from shogun.data_portal.continuous_future_reader import (
     ContinuousFutureSessionBarReader,
@@ -19,6 +28,25 @@ from shogun.instruments.roll_finder import (
 from shogun.data_portal.resample import (
     ReindexSessionBarReader,
 )
+from shogun.data_portal.dispatch_bar_reader import (
+    InstrumentDispatchSessionBarReader,
+)
+
+BASE_FIELDS = frozenset([
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume",
+    "price",
+    "contract",
+    "exchange_symbol",
+    "last_traded",
+])
+
+OHLCVOI_FIELDS = frozenset([
+    "open", "high", "low", "close", "volume", "open_interest"
+])
 
 OHLCVPOI_FIELDS = frozenset([
     "open", "high", "low", "close", "volume", "price", "open_interest"
@@ -31,12 +59,12 @@ _DEF_D_HIST_PREFETCH = DEFAULT_DAILY_HISTORY_PREFETCH
 class DataPortal(object):
     """Interface to all of the data that a shogun simulation needs.
     This is used by the simulation runner to answer questions about the data,
-    like getting the prices of assets on a given day or to service history
+    like getting the prices of instruments on a given day or to service history
     calls.
     Parameters
     ----------
-    asset_finder : shogun.instruments.AssetFinder
-        The AssetFinder instance used to resolve assets.
+    instrument_finder : shogun.instruments.InstrumentFinder
+        The InstrumentFinder instance used to resolve instruments.
     trading_calendar: shogun.custom_calendar.trading_calendar.exchange_calendar.TradingCalendar
         The calendar instance used to provide minute->session information.
     first_trading_day : pd.Timestamp
@@ -83,6 +111,9 @@ class DataPortal(object):
         self.instrument_finder = instrument_finder
 
         self._adjustment_reader = adjustment_reader
+
+        # This will be empty placeholder for now
+        self._augmented_sources_map = {}
 
         self._first_available_session = first_trading_day
 
@@ -180,11 +211,10 @@ class DataPortal(object):
         return self._get_pricing_reader(data_frequency).get_last_traded_dt(
             instrument, dt)
 
-        @staticmethod
-
+    @staticmethod
     def _is_extra_source(instrument, field, map):
         """
-        Internal method that determines if this asset/field combination
+        Internal method that determines if this instrument/field combination
         represents a fetcher value or a regular OHLCVP lookup.
         """
         # If we have an extra source with a column called "price", only look
@@ -193,6 +223,314 @@ class DataPortal(object):
 
         return not (field in BASE_FIELDS and
                     (isinstance(instrument, (Instrument, ContinuousFuture))))
+
+    def _get_fetcher_value(self, instrument, field, dt):
+        day = normalize_date(dt)
+
+        try:
+            return \
+                self._augmented_sources_map[field][instrument].loc[day, field]
+        except KeyError:
+            return np.NaN
+
+    def _get_single_instrument_value(self,
+                                session_label,
+                                instrument,
+                                field,
+                                dt,
+                                data_frequency):
+        if self._is_extra_source(
+                instrument, field, self._augmented_sources_map):
+            return self._get_fetcher_value(instrument, field, dt)
+
+        if field not in BASE_FIELDS:
+            raise KeyError("Invalid column: " + str(field))
+
+        if dt < instrument.start_date or \
+                (data_frequency == "daily" and
+                    session_label > instrument.end_date) or \
+                (data_frequency == "minute" and
+                 session_label > instrument.end_date):
+            if field == "volume":
+                return 0
+            elif field == "contract":
+                return None
+            elif field != "last_traded":
+                return np.NaN
+
+        if data_frequency == "daily":
+            if field == "contract":
+                return self._get_current_contract(instrument, session_label)
+            else:
+                return self._get_daily_spot_value(
+                    instrument, field, session_label,
+                )
+        else:
+            if field == "last_traded":
+                return self.get_last_traded_dt(instrument, dt, 'minute')
+            elif field == "price":
+                return self._get_minute_spot_value(
+                    instrument, "close", dt, ffill=True,
+                )
+            elif field == "contract":
+                return self._get_current_contract(instrument, dt)
+            else:
+                return self._get_minute_spot_value(instrument, field, dt)
+
+    def get_spot_value(self, instruments, field, dt, data_frequency):
+        """
+        Public API method that returns a scalar value representing the value
+        of the desired instrument's field at either the given dt.
+        Parameters
+        ----------
+        instruments : Instrument, ContinuousFuture, or iterable of same.
+            The instrument or instruments whose data is desired.
+        field : {'open', 'high', 'low', 'close', 'volume',
+                 'price', 'last_traded'}
+            The desired field of the instrument.
+        dt : pd.Timestamp
+            The timestamp for the desired value.
+        data_frequency : str
+            The frequency of the data to query; i.e. whether the data is
+            'daily' or 'minute' bars
+        Returns
+        -------
+        value : float, int, or pd.Timestamp
+            The spot value of ``field`` for ``instrument`` The return type is based
+            on the ``field`` requested. If the field is one of 'open', 'high',
+            'low', 'close', or 'price', the value will be a float. If the
+            ``field`` is 'volume' the value will be a int. If the ``field`` is
+            'last_traded' the value will be a Timestamp.
+        """
+        instruments_is_scalar = False
+        if isinstance(instruments, (InstrumentConvertible, PricingDataAssociable)):
+            instruments_is_scalar = True
+        else:
+            # If 'instruments' was not one of the expected types then it should be
+            # an iterable.
+            try:
+                iter(instruments)
+            except TypeError:
+                raise TypeError(
+                    "Unexpected 'instruments' value of type {}."
+                    .format(type(instruments))
+                )
+
+        session_label = self.trading_calendar.minute_to_session_label(dt)
+
+        if instruments_is_scalar:
+            return self._get_single_instrument_value(
+                session_label,
+                instruments,
+                field,
+                dt,
+                data_frequency,
+            )
+        else:
+            get_single_instrument_value = self._get_single_instrument_value
+            return [
+                get_single_instrument_value(
+                    session_label,
+                    instrument,
+                    field,
+                    dt,
+                    data_frequency,
+                )
+                for instrument in instruments
+            ]
+
+    def _get_minute_spot_value(self, instrument, column, dt, ffill=False):
+        reader = self._get_pricing_reader('minute')
+
+        if not ffill:
+            try:
+                return reader.get_value(instrument.exchange_symbol, dt, column)
+            except NoDataOnDate:
+                if column != 'volume':
+                    return np.nan
+                else:
+                    return 0
+
+        # At this point the pairing of column='close' and ffill=True is
+        # assumed.
+        try:
+            # Optimize the best case scenario of a liquid instrument
+            # returning a valid price.
+            result = reader.get_value(instrument.exchange_symbol, dt, column)
+            if not pd.isnull(result):
+                return result
+        except NoDataOnDate:
+            # Handling of no data for the desired date is done by the
+            # forward filling logic.
+            # The last trade may occur on a previous day.
+            pass
+        # If forward filling, we want the last minute with values (up to
+        # and including dt).
+        query_dt = reader.get_last_traded_dt(instrument, dt)
+
+        if pd.isnull(query_dt):
+            # no last traded dt, bail
+            return np.nan
+
+        result = reader.get_value(instrument.exchange_symbol, query_dt, column)
+
+        if (dt == query_dt) or (dt.date() == query_dt.date()):
+            return result
+
+        # the value we found came from a different day, so we have to
+        # adjust the data if there are any adjustments on that day barrier
+        return self.get_adjusted_value(
+            instrument, column, query_dt,
+            dt, "minute", spot_value=result
+        )
+
+    def _get_daily_spot_value(self, instrument, column, dt):
+        reader = self._get_pricing_reader('daily')
+        if column == "last_traded":
+            last_traded_dt = reader.get_last_traded_dt(instrument, dt)
+
+            if isnull(last_traded_dt):
+                return pd.NaT
+            else:
+                return last_traded_dt
+        elif column in OHLCVOI_FIELDS:
+            # don't forward fill
+            try:
+                return reader.get_value(instrument, dt, column)
+            except NoDataOnDate:
+                return np.nan
+        elif column == "price":
+            found_dt = dt
+            while True:
+                try:
+                    value = reader.get_value(
+                        instrument, found_dt, "close"
+                    )
+                    if not isnull(value):
+                        if dt == found_dt:
+                            return value
+                        else:
+                            # adjust if needed
+                            return self.get_adjusted_value(
+                                instrument, column, found_dt, dt, "minute",
+                                spot_value=value
+                            )
+                    else:
+                        found_dt -= self.trading_calendar.day
+                except NoDataOnDate:
+                    return np.nan
+
+    def get_adjustments(self, instruments, field, dt, perspective_dt):
+        """
+        Returns a list of adjustments between the dt and perspective_dt for the
+        given field and list of instruments
+        Parameters
+        ----------
+        instruments : list of type Instrument, or Instrument
+            The instrument, or instruments whose adjustments are desired.
+        field : {'open', 'high', 'low', 'close', 'volume', \
+                 'price', 'last_traded'}
+            The desired field of the instrument.
+        dt : pd.Timestamp
+            The timestamp for the desired value.
+        perspective_dt : pd.Timestamp
+            The timestamp from which the data is being viewed back from.
+        Returns
+        -------
+        adjustments : list[Adjustment]
+            The adjustments to that field.
+        """
+        if isinstance(instruments, Instrument):
+            instruments = [instruments]
+
+        adjustment_ratios_per_instrument = []
+
+        def split_adj_factor(x):
+            return x if field != 'volume' else 1.0 / x
+
+        for instrument in instruments:
+            adjustments_for_instrument = []
+            split_adjustments = self._get_adjustment_list(
+                instrument, self._splits_dict, "SPLITS"
+            )
+            for adj_dt, adj in split_adjustments:
+                if dt < adj_dt <= perspective_dt:
+                    adjustments_for_instrument.append(split_adj_factor(adj))
+                elif adj_dt > perspective_dt:
+                    break
+
+            if field != 'volume':
+                merger_adjustments = self._get_adjustment_list(
+                    instrument, self._mergers_dict, "MERGERS"
+                )
+                for adj_dt, adj in merger_adjustments:
+                    if dt < adj_dt <= perspective_dt:
+                        adjustments_for_instrument.append(adj)
+                    elif adj_dt > perspective_dt:
+                        break
+
+                dividend_adjustments = self._get_adjustment_list(
+                    instrument, self._dividends_dict, "DIVIDENDS",
+                )
+                for adj_dt, adj in dividend_adjustments:
+                    if dt < adj_dt <= perspective_dt:
+                        adjustments_for_instrument.append(adj)
+                    elif adj_dt > perspective_dt:
+                        break
+
+            ratio = reduce(mul, adjustments_for_instrument, 1.0)
+            adjustment_ratios_per_instrument.append(ratio)
+
+        return adjustment_ratios_per_instrument
+
+    def get_adjusted_value(self, instrument, field, dt,
+                           perspective_dt,
+                           data_frequency,
+                           spot_value=None):
+        """
+        Returns a scalar value representing the value
+        of the desired instrument's field at the given dt with adjustments applied.
+        Parameters
+        ----------
+        instrument : Instrument
+            The instrument whose data is desired.
+        field : {'open', 'high', 'low', 'close', 'volume', \
+                 'price', 'last_traded'}
+            The desired field of the instrument.
+        dt : pd.Timestamp
+            The timestamp for the desired value.
+        perspective_dt : pd.Timestamp
+            The timestamp from which the data is being viewed back from.
+        data_frequency : str
+            The frequency of the data to query; i.e. whether the data is
+            'daily' or 'minute' bars
+        Returns
+        -------
+        value : float, int, or pd.Timestamp
+            The value of the given ``field`` for ``instrument`` at ``dt`` with any
+            adjustments known by ``perspective_dt`` applied. The return type is
+            based on the ``field`` requested. If the field is one of 'open',
+            'high', 'low', 'close', or 'price', the value will be a float. If
+            the ``field`` is 'volume' the value will be a int. If the ``field``
+            is 'last_traded' the value will be a Timestamp.
+        """
+        if spot_value is None:
+            # if this a fetcher field, we want to use perspective_dt (not dt)
+            # because we want the new value as of midnight (fetcher only works
+            # on a daily basis, all timestamps are on midnight)
+            if self._is_extra_source(instrument, field,
+                                     self._augmented_sources_map):
+                spot_value = self.get_spot_value(instrument, field, perspective_dt,
+                                                 data_frequency)
+            else:
+                spot_value = self.get_spot_value(instrument, field, dt,
+                                                 data_frequency)
+
+        if isinstance(instrument, Equity):
+            ratio = self.get_adjustments(instrument, field, dt, perspective_dt)[0]
+            spot_value *= ratio
+
+        return spot_value
 
     def get_history_window(self,
                            instruments,
@@ -214,7 +552,7 @@ class DataPortal(object):
         frequency: string
             "1d" or "1m"
         field: string
-            The desired field of the asset.
+            The desired field of the instrument.
         data_frequency: string
             The frequency of the data to query; i.e. whether the data is
             'daily' or 'minute' bars.
@@ -225,7 +563,7 @@ class DataPortal(object):
         -------
         A dataframe containing the requested data.
         """
-        if field not in OHLCVOI_FIELDS and field != 'exchange_symbol':
+        if field not in OHLCVPOI_FIELDS and field != 'exchange_symbol':
             raise ValueError("Invalid field: {0}".format(field))
 
         if bar_count <1:
@@ -233,7 +571,7 @@ class DataPortal(object):
                 "bar_count must be >=1, but got {}".format(bar_count)
             )
 
-        if frequency = "1d":
+        if frequency == "1d":
             if field == "price":
                 df = self._get_history_daily_window(instruments, end_dt, bar_count,
                                                     "close", data_frequency)
@@ -242,10 +580,10 @@ class DataPortal(object):
                                                     field, data_frequency)
         elif frequency == "1m":
             if field == "price":
-                df = self._get_history_minute_window(assets, end_dt, bar_count,
+                df = self._get_history_minute_window(instruments, end_dt, bar_count,
                                                      "close")
             else:
-                df = self._get_history_minute_window(assets, end_dt, bar_count,
+                df = self._get_history_minute_window(instruments, end_dt, bar_count,
                                                      field)
         else:
             raise ValueError("Invalid frequency: {0}".format(frequency))
@@ -254,7 +592,7 @@ class DataPortal(object):
         if field == "price":
             if frequency =="1m":
                 ffill_data_frequency = 'minute'
-            elif frequency = "1d":
+            elif frequency == "1d":
                 ffill_data_frequency = 'daily'
             else:
                 raise Exception(
@@ -263,7 +601,7 @@ class DataPortal(object):
             instruments_with_leading_nan = np.where(isnull(df.iloc[0]))[0]
 
             history_start, history_end = df.index[[0, -1]]
-            if ffill_data_frequency == 'daily' and data_frequency == 'minute'
+            if ffill_data_frequency == 'daily' and data_frequency == 'minute':
                 # When we're looking for a daily value, but we haven't seen any
                 # volume in today's minute bars yet, we need to use the
                 # previous day's ffilled daily price. Using today's daily price
@@ -289,7 +627,7 @@ class DataPortal(object):
                             data_frequency=ffill_data_frequency,
                         )
                     )
-            # Set leading values for assets that were missing data, then ffill.
+            # Set leading values for instruments that were missing data, then ffill.
             df.ix[0, instruments_with_leading_nan] = np.array(
                 initial_values,
                 dtype=np.float64
@@ -297,7 +635,7 @@ class DataPortal(object):
             df.fillna(method='ffill', inplace=True)
 
             # forward-filling will incorrectly produce values after the end of
-            # an asset's lifetime, so write NaNs back over the asset's
+            # an instrument's lifetime, so write NaNs back over the instrument's
             # end_date.
             normed_index = df.index.normalize()
             for instrument in df.columns:
@@ -340,7 +678,7 @@ class DataPortal(object):
                                        end_dt,
                                        field_to_use,
                                        data_frequency):
-        if data_frequency = 'daily':
+        if data_frequency == 'daily':
             # two cases where we use daily data for the whole range:
             # 1) the history window ends at midnight utc.
             # 2) the last desired day of the window is after the
@@ -367,7 +705,7 @@ class DataPortal(object):
         tds = self.trading_calendar.all_sessions
         end_loc = tds.get_loc(end_date)
         start_loc = end_loc - bar_count + 1
-        if start_loc < self.first_trading_day_loc:
+        if start_loc < self._first_trading_day_loc:
             raise HistoryWindowStartBeforeData(
                 first_trading_day=self._first_trading_day.date(),
                 bar_count=bar_count,

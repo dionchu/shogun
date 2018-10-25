@@ -1,9 +1,10 @@
 from pandas import read_hdf, DatetimeIndex
 from trading_calendars import get_calendar
-
+import pandas as pd
 import os
 dirname = os.path.dirname(__file__)
 
+from shogun.utils.memoize import lazyval
 from shogun.data_portal.session_bars import SessionBarReader
 from shogun.data_portal.bar_reader import (
     NoDataAfterDate,
@@ -12,7 +13,7 @@ from shogun.data_portal.bar_reader import (
 )
 
 #class HdfDailyBarReader(SessionBarReader):
-class HdfDailyBarReader(object):
+class HdfDailyBarReader(SessionBarReader):
     """
     Reader for raw pricing data in InstrumentData.h5.
     Parameters
@@ -58,19 +59,37 @@ class HdfDailyBarReader(object):
     - Date
     - Exchange_symbol is the exchange_symbol of the row.
     """
-    def __init__(self, read_all_threshold= 3000):
-        self.trading_calendar = None
-        self._start_session = None
-        self._end_session = None
+    def __init__(self, calendar, start_session=None, end_session=None, read_all_threshold= 3000):
+        self.df = read_hdf(dirname +'\..\database\_InstrumentData.h5')
+        if not start_session:
+            start_session = max(pd.Timestamp(min(self.df.index.get_level_values(1)),tz='UTC'),calendar.first_session)
+        if not end_session:
+            end_session = min(pd.Timestamp(max(self.df.index.get_level_values(1)),tz='UTC'),calendar.last_session)
+        self.calendar = calendar
+        self._start_session = start_session
+        self._end_session = end_session
+
+    @property
+    def trading_calendar(self):
+        return self.calendar
 
     @property
     def sessions(self):
         return self.trading_calendar.sessions_in_range(self._start_session,self._end_session)
 
+    @lazyval
+    def first_trading_day(self):
+        """
+        Returns
+        -------
+        dt : pd.Timestamp
+            The last session for which the reader can provide data.
+        """
+        return self.trading_calendar.first_session
+
+    @property
     def last_available_dt(self):
-        return self.trading_calendar.sessions_in_range(
-            self._start_session, self._end_session
-        )[-1]
+        return self._end_session
 
     def get_last_traded_dt(self, instrument, day):
         instrument_sessions = instrument.exchange_info.calendar.sessions_in_range(
@@ -86,7 +105,7 @@ class HdfDailyBarReader(object):
 
     def load_raw_arrays(self, columns, start_date, end_date, exchange_symbols):
         out = []
-        print(start_date)
+#        print(start_date)
         for exchange_symbol in exchange_symbols:
             query = "date>=" + start_date.strftime("%Y%m%d") + \
                     " & date<=" + end_date.strftime("%Y%m%d") + \
@@ -96,15 +115,15 @@ class HdfDailyBarReader(object):
             result = result[~result.index.get_level_values(1).isin(result_dates.difference(self.sessions))]
             out.append(result.as_matrix(columns))
         debug_session = self.trading_calendar.sessions_in_range(start_date,end_date)
-        print(debug_session.difference(result_dates))
+#        print(debug_session.difference(result_dates))
         return out
 
-    def get_value(self, exchange_symbol, dt, field):
+    def get_value(self, instrument, dt, field):
         """
         Parameters
         ----------
-        exchange_symbol : str
-            The instrument identifier.
+        instrument : Instrument
+            The Instrument object.
         day : datetime64-like
             Midnight of the day for which data is requested.
         colname : string
@@ -118,7 +137,8 @@ class HdfDailyBarReader(object):
             Returns -1 if the day is within the date range, but the price is
             0.
         """
-        print(exchange_symbol)
+        exchange_symbol = instrument.exchange_symbol
+#        print(exchange_symbol)
         query = "date=" + dt.strftime("%Y%m%d") + "& exchange_symbol=" + exchange_symbol
         results = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
         if results.shape[0] == 0:
