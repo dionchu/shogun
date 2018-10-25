@@ -26,6 +26,36 @@ platform_default = 'RIC'
 import os
 dirname = os.path.dirname(__file__)
 
+def query_df(df, eq_conditions = None, ne_conditions = None):
+    """A wrapper function to simplify DataFrame queries
+
+    Parameters
+    ----------
+    df: DataFrame object
+        The DataFrame object being queried
+    conditions: Python dictionary
+        A dictionary mapping key values: column names,
+        to values: target values
+    """
+    count = 0
+    query = ""
+    if eq_conditions:
+        for k, v in eq_conditions.items():
+            if count == 0:
+                query += '(df[\'' + k + '\'] == \'' + v + '\')'
+            else:
+                query += ' & ' + '(df[\'' + k + '\'] == \'' + v + '\')'
+            count += 1
+    if ne_conditions:
+        for k, v in ne_conditions.items():
+            if count == 0:
+                query += '(df[\'' + k + '\'] != \'' + v + '\')'
+            else:
+                query += ' & ' + '(df[\'' + k + '\'] != \'' + v + '\')'
+            count += 1
+    return eval('df[' + query + ']')
+
+
 class FutureRootFactory(object):
     """A future root factory is an object that creates specific futures
     instrument instances for writing into the Futures table.
@@ -53,6 +83,7 @@ class FutureRootFactory(object):
         self._future_calendar_rules = pd.read_csv(dirname + "\_FutureRootContractCalendarRules.csv")
 
         self._root_cache = {}
+        self._root_contract_days = {}
 
     def retrieve_root_info(self, root_symbol=None):
         """
@@ -98,7 +129,7 @@ class FutureRootFactory(object):
         else:
             date_list = pd.date_range(start, end, freq='Q')
 
-        merge = pd.concat([date_list.month.to_series(index = date_list),date_list.year.to_series(index = date_list)], axis =1)
+        merge = pd.DataFrame({'month': date_list.month, 'year': date_list.year}, index=date_list)
         merge.columns = ['month','year']
         monthCode = ["F","G","H","J","K","M","N","Q","U","V","X","Z"]
 
@@ -183,6 +214,7 @@ class FutureRootFactory(object):
                             day = _day, # int
                             offset = _offset, # list
                             observance = _observance, # function
+#                            ).dates(date_list)
                             reference_dates=date_list).dates
 
             contract_rules_dict[contract_day] = contract_field_dict
@@ -190,3 +222,72 @@ class FutureRootFactory(object):
         contract_day_df = pd.DataFrame.from_dict(contract_day_list_dict)
 
         return pd.concat([symbol_df,contract_day_df],axis=1)
+
+    def make_future_contract_day(self, root_symbol):
+
+        exchange_id = query_df(self._future_root,
+                                {'root_symbol': root_symbol}
+                                )['parent_calendar_id'].to_string(index=False)
+
+        # Set up calendar and date rules
+        exchange_calendar = trading_calendars.get_calendar(exchange_id)
+        exchange_holidays = exchange_calendar.regular_holidays.holidays()
+        class ExchangeDay(CustomBusinessDay):
+            def __init__(self, n=1, normalize=False, weekmask='Mon Tue Wed Thu Fri',
+                 holidays=exchange_holidays, calendar=None, offset=timedelta(0)):
+                 super(ExchangeDay, self).__init__(n=n, normalize=False, weekmask='Mon Tue Wed Thu Fri',
+                    holidays=holidays, calendar=None, offset=timedelta(0))
+
+        EDay = ExchangeDay
+
+        def previous_exchange_day(dt):
+            """
+            If day falls on non-exchange day, use previous exchange instead;
+            """
+            if dt.weekday() == 5 or dt.weekday() == 6 or dt in exchange_holidays:
+                return dt + EDay(-1)
+            return dt
+
+        def next_exchange_day(dt):
+            """
+            If day falls on non-exchange day, use previous exchange instead;
+            """
+            if dt.weekday() == 5 or dt.weekday() == 6 or dt in exchange_holidays:
+                return dt + EDay(1)
+            return dt
+
+        # Obtain relevant contract rules, calculate dates and create pandas dataframe
+        contract_rules = self._future_calendar_rules[self._future_calendar_rules['root_symbol'] == root_symbol]
+        contract_day_list = list(contract_rules.contract_day.unique())
+
+        contract_rules_dict = {}
+
+        globs = globals()
+        locs = locals()
+
+        for contract_day in contract_day_list:
+            contract_field_list = list(contract_rules.field.unique())
+
+            # Extract rules
+
+            for contract_field in contract_field_list:
+                    contract_field_dict = {'day': None, 'offset': None, 'observance': None}
+                    contract_field_dict[contract_field] = list(
+                        contract_rules[(contract_rules['contract_day'] == contract_day) &
+                        (contract_rules['field'] == contract_field)
+                        ].value.astype(str))
+
+            # Create and assign FutureContractDay dates
+            _day = None if contract_field_dict['day'] is None else int(contract_field_dict['day'][0])
+            _offset = None if contract_field_dict['offset'] is None else [eval(x,globs,locs) for x in contract_field_dict['offset']]
+            _observance = None if contract_field_dict['observance'] is None else eval(contract_field_dict['observance'][0],globs,locs)
+
+            contract_rules_dict[contract_day] = FutureContractDay(
+                            root_symbol=root_symbol,
+                            name=contract_day,
+                            day = _day, # int
+                            offset = _offset, # list
+                            observance = _observance, # function
+                            )
+
+        self._root_contract_days[root_symbol] = contract_rules_dict
