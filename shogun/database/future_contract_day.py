@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime as datetime
 import warnings
 from pandas.errors import PerformanceWarning
 
@@ -8,7 +9,7 @@ class FutureContractDay(object):
     """
 
     def __init__(self, root_symbol=None, name=None, day=None, offset=None,
-                 observance=None):#, reference_dates=None):
+                 observance=None):
         """
         Parameters
         ----------
@@ -32,7 +33,6 @@ class FutureContractDay(object):
         self.day = day if not None else 1
         self.offset = offset
         self.observance = observance
-#        self.reference_dates = reference_dates
 
     def __repr__(self):
         info = ''
@@ -48,19 +48,17 @@ class FutureContractDay(object):
         repr = '{root_symbol}: {name} ({info})'.format(root_symbol=self.root_symbol, name=self.name, info=info)
         return repr
 
-#    @property
     def dates(self, reference_dates):
-#    def dates(self):
         """
         Calculate contract dates for datetimeindex dates
         Parameters
         ----------
         dates: datetimeindex
         """
-
-#        contract_dates = pd.to_datetime(self.reference_dates.to_series().apply(lambda dt: dt.replace(day=self.day)).values)
-#        contract_dates = pd.to_datetime(reference_dates.to_series().apply(lambda dt: dt.replace(day=self.day)).values)
-        contract_dates = reference_dates
+        if isinstance(reference_dates, pd.Timestamp) or isinstance(reference_dates, datetime.date):
+            contract_dates = pd.to_datetime(reference_dates.replace(day=self.day))#, utc=True)
+        else:
+            contract_dates = pd.to_datetime(reference_dates.to_series().apply(lambda dt: dt.replace(day=self.day)).values)#, utc=True)
 
         if self.offset is not None:
             if not isinstance(self.offset, list):
@@ -76,6 +74,9 @@ class FutureContractDay(object):
                     contract_dates += offset
 
         if self.observance is not None:
-            contract_dates = contract_dates.map(lambda d: self.observance(d))
+            if isinstance(reference_dates, pd.Timestamp) or isinstance(reference_dates, datetime.date):
+                contract_dates = self.observance(contract_dates)
+            else:
+                contract_dates = contract_dates.map(lambda d: self.observance(d))
 
         return contract_dates
