@@ -30,7 +30,7 @@ class FutureContractDay(object):
 
         self.root_symbol = root_symbol
         self.name = name
-        self.day = day if not None else 1
+        self.day = 1 if day is None else day
         self.offset = offset
         self.observance = observance
 

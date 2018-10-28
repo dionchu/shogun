@@ -50,7 +50,6 @@ def get_front_month_suffix(listed_months, date, offset = 0):
 
     return front_month_code + str(front_month_year)[-2:]
 
-
 def suffix_to_date(suffix):
     mo = MONTH_CODE[MONTH_CODE == suffix[0]].index.values[0]
     yr = 2000+int(suffix[-2:])
@@ -139,7 +138,7 @@ class FutureRootFactory(object):
         if not root_symbol:
             return None
 
-        if not end:
+        if end is None:
             end = pd.Timestamp(self.get_contract_listing(root_symbol,date.today()).index[-1],tz='UTC')
 
         exchange_id = self._future_root[
@@ -182,6 +181,31 @@ class FutureRootFactory(object):
         contract_day_df = pd.DataFrame.from_dict(contract_day_list_dict)
 
         return pd.concat([symbol_df,contract_day_df],axis=1)
+
+
+    def calculate_contract_days(self, exchange_symbols):
+        # split symbols into root_symbol and month-year
+        split_df = pd.DataFrame([x.split("_") for x in exchange_symbols])
+
+        root_groups = split_df.groupby(split_df.columns[0])
+
+        out=pd.DataFrame()
+        for root_symbol in split_df.groupby(split_df.columns[0]).groups:
+
+            self.make_future_contract_day(root_symbol)
+
+            grouped_split_df = root_groups.get_group(root_symbol).reset_index(drop=True)
+            date_list = pd.DatetimeIndex(grouped_split_df.iloc[:,1].apply(suffix_to_date))
+
+            contract_day_list_dict = {}
+            for k, v in self._root_contract_days[root_symbol].items():
+                contract_day_list_dict[k] = self._root_contract_days[root_symbol][k].dates(date_list)
+
+            contract_day_df = pd.DataFrame.from_dict(contract_day_list_dict)
+            out = out.append(pd.concat([grouped_split_df.loc[:,0]+"_"+grouped_split_df.loc[:,1],contract_day_df], axis=1))
+        out.rename(columns = {0: 'exchange_symbol'}, inplace=True)
+        out.reset_index(drop=True,inplace=True)
+        return out
 
     def get_contract_listing(self, root_symbol, date):
         # ensure that date is a pd.Timestamp class
@@ -235,9 +259,10 @@ class FutureRootFactory(object):
                                      filtered_df.index
                                      )
 
-            self._root_contract_listing[(date, root_symbol)] = filtered_df[last_trade_dates >= date]
+            out = self.get_platform_tickers(root_symbol,filtered_df[last_trade_dates >= date], platform_default)
 
-            return self.get_platform_tickers(root_symbol,filtered_df[last_trade_dates >= date], platform_default)
+            self._root_contract_listing[(date, root_symbol)] = out
+            return out
 
     def make_future_contract_day(self, root_symbol):
         # if already cached, bail early
@@ -389,3 +414,17 @@ class FutureRootFactory(object):
         return pd.DataFrame({'exchange_symbol': exchange_tkr.values, 'platform_symbol': platform_tkr.values,
                                  'delivery_month': month_year_df.index.month, 'delivery_year': month_year_df.index.year},
                                  index = month_year_df.index)
+
+    def exchange_symbol_to_ticker(self, exchange_symbol, platform = platform_default):
+        root_symbol, suffix = exchange_symbol.split("_")
+        platform_symbol = self._platform_symbol_mapping[
+                (self._platform_symbol_mapping['exchange_symbol'] == root_symbol) & \
+                (self._platform_symbol_mapping['platform'] == platform)
+                ].set_index('exchange_symbol').to_dict()['platform_symbol'][root_symbol]
+
+        if platform == "BBG":
+            platform_tkr = platform_symbol+suffix
+        elif platform == "RIC":
+            platform_tkr = platform_symbol+suffix[0]+suffix[-1]+"^"+suffix[1]
+
+        return platform_tkr
