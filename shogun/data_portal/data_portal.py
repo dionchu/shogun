@@ -669,7 +669,7 @@ class DataPortal(object):
         return pd.DataFrame(
             data,
             index=days_for_window,
-            columns=instruments
+            columns=[i.exchange_symbol for i in instruments]#instruments
         )
 
     def _get_history_daily_window_data(self,

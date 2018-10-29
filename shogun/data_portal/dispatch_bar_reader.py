@@ -92,9 +92,10 @@ class InstrumentDispatchBarReader(with_metaclass(ABCMeta)):
         return min(r.first_trading_day for r in self._readers.values())
 
     def get_value(self, exchange_symbol, dt, field):
+        #changed 10/29
         instrument = self._instrument_finder.retrieve_instrument(exchange_symbol)
         r = self._readers[type(instrument)]
-        return r.get_value(instrument, dt, field)
+        return r.get_value(instrument.exchange_symbol, dt, field)
 
     def get_last_traded_dt(self, instrument, dt):
         r = self._readers[type(instrument)]

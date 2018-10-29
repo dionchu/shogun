@@ -122,8 +122,8 @@ class HdfDailyBarReader(SessionBarReader):
         """
         Parameters
         ----------
-        instrument : Instrument
-            The Instrument object.
+        exchange_symbol : Exchange Symbol
+            The exchange_symbol to get.
         day : datetime64-like
             Midnight of the day for which data is requested.
         colname : string

@@ -231,7 +231,7 @@ class ContinuousFutureAdjustmentReader(object):
         tc = self._trading_calendar
 
         adjs = {}
-
+        
         for front, back in sliding_window(2, rolls):
             front_exchange_symbol, roll_dt = front
             back_exchange_symbol = back[0]
@@ -364,7 +364,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
             # future, so arbitrarily get the contract with next upcoming auto
             # close date.
             oc = self._instrument_finder.get_ordered_contracts(instrument.root_symbol)
-            exchange_symbol = oc.contract_before_auto_close(reference_date)
+            exchange_symbol = oc.contract_before_auto_close(reference_date.value)
             if exchange_symbol is not None:
                 contract = self._instrument_finder.retrieve_instrument(exchange_symbol)
                 if contract.tick_size:
