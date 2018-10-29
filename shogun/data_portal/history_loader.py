@@ -231,7 +231,7 @@ class ContinuousFutureAdjustmentReader(object):
         tc = self._trading_calendar
 
         adjs = {}
-        
+
         for front, back in sliding_window(2, rolls):
             front_exchange_symbol, roll_dt = front
             back_exchange_symbol = back[0]
@@ -316,7 +316,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
     adjustment_reader : SQLiteAdjustmentReader
         Reader for adjustment data.
     """
-    FIELDS = ('open', 'high', 'low', 'close', 'volume', 'exchange_symbol')
+    FIELDS = ('open', 'high', 'low', 'close', 'volume', 'open_interest', 'exchange_symbol')
 
     def __init__(self, trading_calendar, reader, equity_adjustment_reader,
                  instrument_finder,
@@ -444,7 +444,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
                 window_type = Float64Window
 
             view_kwargs = {}
-            if field == 'volume':
+            if field == 'volume' or field == 'open_interest':
                 array = array.astype(float64_dtype)
 
             for i, instrument in enumerate(needed_instruments):

@@ -2,6 +2,7 @@ import os.path
 import numpy as np
 import pandas as pd
 import logging
+import trading_calendars
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
 from .future_root_factory import FutureRootFactory
@@ -15,6 +16,9 @@ import os
 dirname = os.path.dirname(__file__)
 
 import logging
+
+from datetime import date
+from pandas.tseries.offsets import *
 
 columns =[
         'exchange_symbol',
@@ -102,10 +106,11 @@ def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_da
     return data_df.append(tmp)
 
 
-def write_future(factory,root_symbol):
+def write_future(factory,root_symbol,as_of_date):
         """
         write new future instruments to table.
         """
+        as_of_date = pd.Timestamp(as_of_date)
         logging.basicConfig(filename='./python_logs/write_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
         logging.info('Started')
         # Construct futures instruments data
@@ -140,7 +145,7 @@ def write_future(factory,root_symbol):
             print(platform_symbol)
             exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
             start = platform_query['start_date'][platform_symbol].strftime("%Y-%m-%d")
-            end = min(platform_query['last_trade'][platform_symbol], today).strftime("%Y-%m-%d")
+            end = min(platform_query['last_trade'][platform_symbol], as_of_date).strftime("%Y-%m-%d")
             if(today <= platform_query['last_trade'][platform_symbol]):
                 tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
             else:
@@ -150,14 +155,15 @@ def write_future(factory,root_symbol):
         # Change default column names to lower case
         data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
         data_df.index.name = 'date'
-        check_missing_extra_days(data_df)
+        check_missing_extra_days(factory, data_df)
         data_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
         # Append data to hdf, remove duplicates, and write to both hdf and csv
         if os.path.isfile(dirname + "\_FutureInstrument.h5"):
             instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
-            instrument_data_hdf = instrument_data_hdf.append(data_df).drop_duplicates()
+            instrument_data_hdf = instrument_data_hdf.append(data_df)
             instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
+            instrument_data_hdf = instrument_data_hdf[~instrument_data_hdf.index.duplicated(keep='last')]
             instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
                format='table', data_columns=True)
             instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
@@ -200,7 +206,8 @@ def write_future(factory,root_symbol):
         # Append data to hdf, remove duplicates, and write to both hdf and csv
         if os.path.isfile(dirname + "\_FutureInstrument.h5"):
             future_instrument_hdf = read_hdf(dirname +'\_FutureInstrument.h5')
-            future_instrument_hdf = future_instrument_hdf.append(metadata_df).drop_duplicates(keep = 'last')
+            future_instrument_hdf = future_instrument_hdf.append(metadata_df)
+            future_instrument_hdf = future_instrument_hdf[~future_instrument_hdf.index.duplicated(keep='last')]
             future_instrument_hdf.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
                format='table', data_columns=True)
             future_instrument_hdf.to_csv(dirname + "\_FutureInstrument.csv")
@@ -215,7 +222,8 @@ def write_future(factory,root_symbol):
 
         if os.path.isfile(dirname + "\_InstrumentRouter.h5"):
             instrument_router_hdf = read_hdf(dirname +'\_InstrumentRouter.h5')
-            instrument_router_hdf = instrument_router_hdf.append(instrument_router_df).drop_duplicates(keep = 'last')
+            instrument_router_hdf = instrument_router_hdf.append(instrument_router_df)
+            instrument_router_hdf = instrument_router_hdf[~instrument_router_hdf.index.duplicated(keep='last')]
             instrument_router_hdf.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
                format='table', data_columns=True)
             instrument_router_hdf.to_csv(dirname + "\_InstrumentRouter.csv")
@@ -306,12 +314,13 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
     # Change default column names to lower case
     data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
     data_df.index.name = 'date'
-    check_missing_extra_days(data_df)
+    check_missing_extra_days(factory, data_df)
     data_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
     # Append data to hdf, remove duplicates, and write to both hdf and csv
     instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
-    instrument_data_hdf = instrument_data_hdf.append(data_df).drop_duplicates()
+    instrument_data_hdf = instrument_data_hdf.append(data_df)
+    instrument_data_hdf = instrument_data_hdf[~instrument_data_hdf.index.duplicated(keep='last')]
     instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
     instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
        format='table', data_columns=True)
@@ -351,7 +360,8 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
         # update end dates in metadata
         for symbol in existing_contracts.exchange_symbol:
             future_instrument_hdf.at[symbol, 'end_date'] = start_end_df.to_dict()['end_date'][symbol]
-        future_instrument_hdf = future_instrument_hdf.append(metadata_df).drop_duplicates(keep = 'last')
+        future_instrument_hdf = future_instrument_hdf.append(metadata_df)
+        future_instrument_hdf = future_instrument_hdf[~future_instrument_hdf.index.duplicated(keep='last')]
         future_instrument_hdf.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
            format='table', data_columns=True)
         future_instrument_hdf.to_csv(dirname + "\_FutureInstrument.csv")
@@ -365,7 +375,8 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
     if os.path.isfile(dirname + "\_InstrumentRouter.h5"):
         instrument_router_hdf = read_hdf(dirname +'\_InstrumentRouter.h5')
-        instrument_router_hdf = instrument_router_hdf.append(instrument_router_df).drop_duplicates(keep = 'last')
+        instrument_router_hdf = instrument_router_hdf.append(instrument_router_df)
+        instrument_router_hdf = instrument_router_hdf[~instrument_router_hdf.index.duplicated(keep='last')]
         instrument_router_hdf.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
            format='table', data_columns=True)
         instrument_router_hdf.to_csv(dirname + "\_InstrumentRouter.csv")
@@ -378,7 +389,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
     return data_df
 
-def check_missing_extra_days(data_df):
+def check_missing_extra_days(factory, data_df):
 
 #    data_df.reset_index(level=[0], inplace=True)
     grouped_df = data_df.groupby('exchange_symbol')
