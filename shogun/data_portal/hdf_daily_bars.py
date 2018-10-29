@@ -62,9 +62,9 @@ class HdfDailyBarReader(SessionBarReader):
     def __init__(self, calendar, start_session=None, end_session=None, read_all_threshold= 3000):
         self.df = read_hdf(dirname +'\..\database\_InstrumentData.h5')
         if not start_session:
-            start_session = max(pd.Timestamp(min(self.df.index.get_level_values(1)),tz='UTC'),calendar.first_session)
+            start_session = max(pd.Timestamp(min(self.df.index.get_level_values(0)),tz='UTC'),calendar.first_session)
         if not end_session:
-            end_session = min(pd.Timestamp(max(self.df.index.get_level_values(1)),tz='UTC'),calendar.last_session)
+            end_session = min(pd.Timestamp(max(self.df.index.get_level_values(0)),tz='UTC'),calendar.last_session)
         self.calendar = calendar
         self._start_session = start_session
         self._end_session = end_session
@@ -111,14 +111,14 @@ class HdfDailyBarReader(SessionBarReader):
                     " & date<=" + end_date.strftime("%Y%m%d") + \
                     " & exchange_symbol=" + exchange_symbol
             result = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
-            result_dates = DatetimeIndex(result.index.get_level_values(1), dtype='datetime64[ns, UTC]')
-            result = result[~result.index.get_level_values(1).isin(result_dates.difference(self.sessions))]
+            result_dates = DatetimeIndex(result.index.get_level_values(0), dtype='datetime64[ns, UTC]')
+            result = result[~result.index.get_level_values(0).isin(result_dates.difference(self.sessions))]
             out.append(result.as_matrix(columns))
         debug_session = self.trading_calendar.sessions_in_range(start_date,end_date)
 #        print(debug_session.difference(result_dates))
         return out
 
-    def get_value(self, instrument, dt, field):
+    def get_value(self, exchange_symbol, dt, field):
         """
         Parameters
         ----------
@@ -137,7 +137,7 @@ class HdfDailyBarReader(SessionBarReader):
             Returns -1 if the day is within the date range, but the price is
             0.
         """
-        exchange_symbol = instrument.exchange_symbol
+#        exchange_symbol = instrument.exchange_symbol
 #        print(exchange_symbol)
         query = "date=" + dt.strftime("%Y%m%d") + "& exchange_symbol=" + exchange_symbol
         results = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)

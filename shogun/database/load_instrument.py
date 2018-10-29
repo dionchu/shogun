@@ -16,12 +16,6 @@ dirname = os.path.dirname(__file__)
 
 import logging
 
-#run through loop to get data for all, keeping in mind 5 year limit to history
-def put_to_hdf(df):
-    hdf = HDFStore(dirname + "\_InstrumentData.5")
-    hdf.put('InstrumentData', df, format='table', data_columns=True)
-    hdf.close() # closes the file
-
 columns =[
         'exchange_symbol',
         'root_symbol',
@@ -112,38 +106,67 @@ def write_future(factory,root_symbol):
         """
         write new future instruments to table.
         """
-        logging.basicConfig(filename='write_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
+        logging.basicConfig(filename='./python_logs/write_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
         logging.info('Started')
         # Construct futures instruments data
         root_chain_df = factory.make_root_chain(root_symbol)
         root_info_dict = factory.retrieve_root_info(root_symbol)
-
-        # Convert pandas to dict for ease of extraction and indexing
         root_chain_dict = root_chain_df.set_index('platform_symbol').to_dict()
-        platform_symbol_list = list(root_chain_dict['exchange_symbol'].keys())
+        root_listing_df = query_df(factory._future_contract_listing, {'root_symbol': root_symbol})
+        root_listing_dict = root_listing_df.set_index('delivery_month').to_dict()
 
-        # Loop through symbols and save in data frame
+        if 'first_trade' not in root_chain_df.columns:
+            first_trade = {}
+            d = root_chain_df.set_index('exchange_symbol').to_dict()
+            for exchange_symbol in root_chain_df.exchange_symbol:
+                month_code = exchange_symbol[-3:][0]
+                first_trade[exchange_symbol] = pd.date_range(end = d['last_trade'][exchange_symbol],
+                                periods=root_listing_dict['periods'][month_code],
+                                freq=root_listing_dict['frequency'][month_code])[0] + MonthBegin(n=-1)
+
+            root_chain_dict['last_trade'] = {factory.exchange_symbol_to_ticker(key): value for (key, value) in first_trade.items()}
+
+        # combine information in dictionary
+        platform_query = {
+        'last_trade': root_chain_dict['last_trade'],
+        'exchange_symbol': root_chain_dict['exchange_symbol'],
+        'start_date': root_chain_dict['first_trade'],
+        }
+
+        # Loop through symbols and pull raw data into data frame
+        today = pd.Timestamp(date.today())
         data_df = pd.DataFrame()
-        for platform_symbol in platform_symbol_list:
+        for platform_symbol in platform_query['exchange_symbol'].keys():
             print(platform_symbol)
-            exchange_symbol = root_chain_dict['exchange_symbol'][platform_symbol]
-            start = root_chain_dict['first_trade'][platform_symbol].strftime("%Y-%m-%d")
-            end = root_chain_dict['last_trade'][platform_symbol].strftime("%Y-%m-%d")
-            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
+            exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
+            start = platform_query['start_date'][platform_symbol].strftime("%Y-%m-%d")
+            end = min(platform_query['last_trade'][platform_symbol], today).strftime("%Y-%m-%d")
+            if(today <= platform_query['last_trade'][platform_symbol]):
+                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
+            else:
+                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
             data_df = data_df.append(tmp)
 
         # Change default column names to lower case
         data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
-
         data_df.index.name = 'date'
+        check_missing_extra_days(data_df)
         data_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
         # Append data to hdf, remove duplicates, and write to both hdf and csv
-        instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
-        instrument_data_hdf = instrument_data_hdf.append(data_df).drop_duplicates()
-        instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
-           format='table', data_columns=True)
-        instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
+        if os.path.isfile(dirname + "\_FutureInstrument.h5"):
+            instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
+            instrument_data_hdf = instrument_data_hdf.append(data_df).drop_duplicates()
+            instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
+            instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
+               format='table', data_columns=True)
+            instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
+        else:
+            instrument_data_hdf = data_df.drop_duplicates()
+            instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
+            instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
+                            format='table', data_columns=True)
+            instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
 
         # Combine futures instrument information and calculated dates
         root_info_and_chain = pd.concat([pd.DataFrame.from_dict(root_info_dict),root_chain_df],axis=1).fillna(method='ffill')
@@ -157,6 +180,12 @@ def write_future(factory,root_symbol):
             'end_date': data_df.groupby(['exchange_symbol']).last()['date']
             })
 
+        # filter for common symbols
+        common_symbols = set(root_info_and_chain.exchange_symbol).intersection(start_end_df.index)
+        root_info_and_chain[root_info_and_chain['exchange_symbol'].isin(common_symbols)]
+        start_end_df = start_end_df.loc[common_symbols]
+        start_end_df.reset_index(level=[0],inplace=True)
+
         # inner join with future_instrument_df to enforce column structure, merge start and end
         metadata_df = pd.concat([future_instrument_df,root_info_and_chain], join = "inner")
         metadata_df = pd.merge(metadata_df,start_end_df, on='exchange_symbol')
@@ -165,6 +194,7 @@ def write_future(factory,root_symbol):
         metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(int)
 
         metadata_df.set_index(['exchange_symbol'], append=True, inplace=True)
+        metadata_df.reset_index(level=[0],drop=True,inplace=True)
 
         # Assumes that hdf exists
         # Append data to hdf, remove duplicates, and write to both hdf and csv
@@ -180,7 +210,6 @@ def write_future(factory,root_symbol):
             metadata_df.to_csv(dirname + "\_FutureInstrument.csv")
 
 
-        # Assumes that hdf exists
         # Assign instrument routing information to table
         instrument_router_df = pd.DataFrame({'instrument_type': ['Future']}, index=metadata_df.index)
 
@@ -203,7 +232,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
     """
     update future to table
     """
-    logging.basicConfig(filename='update_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
+    logging.basicConfig(filename='./python_logs/update_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
     logging.info('Started')
 
     exchange_id = query_df(factory._future_root,
@@ -246,7 +275,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
         missing_query_start = {}
         for exchange_symbol in missing_root_chain_df.exchange_symbol:
             month_code = exchange_symbol[-3:][0]
-            query_start[exchange_symbol] = pd.date_range(end = missing_dict['last_trade'][exchange_symbol],
+            missing_query_start[exchange_symbol] = pd.date_range(end = missing_dict['last_trade'][exchange_symbol],
                             periods=root_dict['periods'][month_code],
                             freq=root_dict['frequency'][month_code])[0] + MonthBegin(n=-1)
     else:
@@ -276,15 +305,14 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
     # Change default column names to lower case
     data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
-
     data_df.index.name = 'date'
-    data_df.set_index(['exchange_symbol'], append=True, inplace=True)
-
     check_missing_extra_days(data_df)
+    data_df.set_index(['exchange_symbol'], append=True, inplace=True)
 
     # Append data to hdf, remove duplicates, and write to both hdf and csv
     instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
     instrument_data_hdf = instrument_data_hdf.append(data_df).drop_duplicates()
+    instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
     instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
        format='table', data_columns=True)
     instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
@@ -293,7 +321,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
     root_info_and_chain = pd.concat([pd.DataFrame.from_dict(missing_root_info_dict),missing_root_chain_df],axis=1).fillna(method='ffill')
 
     # Reset index to columns
-    data_df.reset_index(level=[0,1], inplace=True)
+    data_df.reset_index(level=[0], inplace=True)
 
     # Calculate start and end dates
     start_end_df = pd.DataFrame(
@@ -315,6 +343,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
     metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(int)
 
     metadata_df.set_index(['exchange_symbol'], inplace=True)
+    metadata_df.reset_index(level=[0],drop=True,inplace=True)
 
     # Append data to hdf, remove duplicates, and write to both hdf and csv
     if os.path.isfile(dirname + "\_FutureInstrument.h5"):
@@ -351,7 +380,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
 def check_missing_extra_days(data_df):
 
-    data_df.reset_index(level=[0], inplace=True)
+#    data_df.reset_index(level=[0], inplace=True)
     grouped_df = data_df.groupby('exchange_symbol')
 
     for exchange_symbol in grouped_df.groups:

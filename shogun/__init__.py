@@ -16,7 +16,34 @@
 from distutils.version import StrictVersion
 import os
 import numpy as np
+import pandas as pd
+from pandas.tseries.offsets import *
+from datetime import date
+from pandas import read_hdf
+from pandas import HDFStore,DataFrame
 
 # This is *not* a place to dump arbitrary classes/modules for convenience,
 # it is a place to expose the public interfaces.
 from trading_calendars import get_calendar
+from .data_portal.data_portal import DataPortal
+from .instruments.instrument_finder import InstrumentFinder
+from .data_portal.hdf_daily_bars import HdfDailyBarReader
+from .data_portal.history_loader import ContinuousFutureAdjustmentReader
+from .data_portal.continuous_future_reader import ContinuousFutureSessionBarReader
+from .database.future_root_factory import FutureRootFactory
+from .instruments.roll_finder import (
+    CalendarRollFinder,
+    VolumeRollFinder
+)
+
+__all__ = [
+    'get_calendar',
+    'DataPortal',
+    'InstrumentFinder',
+    'HdfDailyBarReader',
+    'ContinuousFutureAdjustmentReader',
+    'ContinuousFutureSessionBarReader',
+    'FutureRootFactory',
+    'CalendarRollFinder',
+    'VolumeRollFinder',
+]

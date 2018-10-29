@@ -448,7 +448,8 @@ class InstrumentFinder(object):
     @staticmethod
     def _select_instruments_by_exchange_symbol(instrument_hdf, exchange_symbols):
         return instrument_hdf[
-            instrument_hdf.index.isin(exchange_symbols)
+#0.23 pandas            instrument_hdf.index.isin(exchange_symbols)
+            instrument_hdf.index.isin(exchange_symbols, level='exchange_symbol')
             ]
 
 class InstrumentConvertible(with_metaclass(ABCMeta)):

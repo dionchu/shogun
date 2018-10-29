@@ -24,6 +24,9 @@ from shogun.utils.memoize import lazyval
 from zipline.utils.numpy_utils import float64_dtype
 from zipline.utils.pandas_utils import find_in_sorted_index, normalize_date
 
+# Default number of decimal places used for rounding instrument prices.
+DEFAULT_INSTRUMENT_PRICE_DECIMALS = 3
+
 class HistoryCompatibleUSEquityAdjustmentReader(object):
 
     def __init__(self, adjustment_reader):
@@ -361,7 +364,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
             # future, so arbitrarily get the contract with next upcoming auto
             # close date.
             oc = self._instrument_finder.get_ordered_contracts(instrument.root_symbol)
-            exchange_symbol = oc.contract_before_auto_close(reference_date.value)
+            exchange_symbol = oc.contract_before_auto_close(reference_date)
             if exchange_symbol is not None:
                 contract = self._instrument_finder.retrieve_instrument(exchange_symbol)
                 if contract.tick_size:
@@ -402,7 +405,7 @@ class HistoryLoader(with_metaclass(ABCMeta)):
         needed_instruments = []
         cal = self._calendar
 
-        instruments = self._instrument_finder.retrieve_all(instruments)
+        #instruments = self._instrument_finder.retrieve_all(instruments)
         end_ix = find_in_sorted_index(cal, end)
 
         for instrument in instruments:
