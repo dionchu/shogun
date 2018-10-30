@@ -129,7 +129,7 @@ class FutureRootFactory(object):
         cache[root_symbol] = root_dict
         return root_dict
 
-    def make_root_chain(self, root_symbol, start=start_default, end=None, platform=platform_default):
+    def make_root_chain(self, root_symbol, start=None, end=None, platform=platform_default):
         """
         Generate root chain for a given root symbol and range.
         """
@@ -137,6 +137,9 @@ class FutureRootFactory(object):
         # Fastpath for empty request.
         if not root_symbol:
             return None
+
+        if start is None:
+            start = start_default
 
         if end is None:
             end = pd.Timestamp(self.get_contract_listing(root_symbol,date.today()).index[-1],tz='UTC')
