@@ -1,5 +1,6 @@
 from trading_calendars import get_calendar
-
+import math
+import numpy as np
 
 class Instrument(object):
     """
@@ -286,8 +287,8 @@ class Future(Instrument):
         self.delivery_month = delivery_month
         self.delivery_year = delivery_year
 
-        if auto_close_date is None:
-            if first_notice is None:
+        if math.isnan(auto_close_date):
+            if first_notice is None :
                 self.auto_close_date = last_trade
             else:
                 self.auto_close_date = first_notice

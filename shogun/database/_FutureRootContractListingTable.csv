@@ -307,6 +307,10 @@ ZN,0,H,None,None,3,Q,1,FN,None
 ZN,0,M,None,None,3,Q,1,FN,None
 ZN,0,U,None,None,3,Q,1,FN,None
 ZN,0,Z,None,None,3,Q,1,FN,None
+TN,0,H,None,None,3,Q,1,FN,None
+TN,0,M,None,None,3,Q,1,FN,None
+TN,0,U,None,None,3,Q,1,FN,None
+TN,0,Z,None,None,3,Q,1,FN,None
 ZB,0,H,None,None,3,Q,1,FN,None
 ZB,0,M,None,None,3,Q,1,FN,None
 ZB,0,U,None,None,3,Q,1,FN,None
