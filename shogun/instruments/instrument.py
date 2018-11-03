@@ -287,7 +287,7 @@ class Future(Instrument):
         self.delivery_month = delivery_month
         self.delivery_year = delivery_year
 
-        if math.isnan(auto_close_date):
+        if str(auto_close_date) == 'nan':
             if first_notice is None :
                 self.auto_close_date = last_trade
             else:

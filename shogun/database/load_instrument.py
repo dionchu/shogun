@@ -171,7 +171,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
     # check if today is exchange holiday/weekend
     if not trading_calendars.get_calendar(exchange_id).is_session(dt):
-        print('{dt} not a valid session: do nothing'.format(dt=today.strftime("%Y-%m-%d")))
+        print('{dt} not a valid session: do nothing'.format(dt=dt.strftime("%Y-%m-%d")))
         return
 
     # compare todays list to existing FutureInstrument table
