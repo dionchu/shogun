@@ -62,8 +62,8 @@ IN,CNX Nifty Index,CNX Nifty Index,XSES,SGX,XSES,,5,IN,USD,2,0.5,,18:10,18:15,cs
 TW,MSCI Taiwan Index,MSCI Taiwan Index,XSES,SGX,XSES,,5,TW,USD,100,0.1,,13:45,13:50,cspa,exch,0,TWSE 30min twap,13:00,13:30,exch,13:45,
 CN,FTSE Xinhua China A50,FTSE China A50 Index,XSES,SGX,XSES,,5,CN,USD,1,2.5,,16:30,16:35,cspa,exch,0,SSE close,14:57,15:00,exch,16:30,
 YM,Mini DJI,Dow Jones Industrial Average,XCME,CBOT,XCME,,5,US,USD,5,1,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,
-SP,S&P 500,S&P 500 Index,XCME,CME,XCME,,5,US,USD,250,0.1,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,16:15,last_trade
-ES,E-mini S&P 500,S&P 500 Index,XCME,CME,XCME,,5,US,USD,50,0.25,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,last_trade
+SP,S&P 500,S&P 500 Index,XCME,CME,XCME,EQD,5,US,USD,250,0.1,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,16:15,last_trade
+ES,E-mini S&P 500,S&P 500 Index,XCME,CME,XCME,EQD,5,US,USD,50,0.25,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,last_trade
 SXM,Mini TSX Index,TSX Index,XMOD,MX,XMOD,EQD,5,CA,CAD,50,0.1,,15:59,16:00,vwap,exch,0,Opening Price,9:30,9:30,exch,9:30,
 SXF,TSX Index,TSX Index,XMOD,MX,XMOD,EQD,5,CA,CAD,200,0.1,,15:59,16:00,vwap,exch,0,Opening Price,9:30,9:30,exch,9:30,
 IR,90 Day Bills,Australia 90 Day Bank Bill,XASX,ASX,XASX,,2,AU,AUD,2400,0.01,,16:10,16:12,cspa,exch,1,Delivery,10:00,10:00,exch,12:00,
