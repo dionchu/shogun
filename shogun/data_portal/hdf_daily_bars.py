@@ -115,7 +115,7 @@ class HdfDailyBarReader(SessionBarReader):
             result = result[~result.index.get_level_values(0).isin(result_dates.difference(self.sessions))]
             out.append(result.as_matrix(columns))
         debug_session = self.trading_calendar.sessions_in_range(start_date,end_date)
-#        print(debug_session.difference(result_dates))
+        print(debug_session.difference(result_dates))
         return out
 
     def get_value(self, exchange_symbol, dt, field):

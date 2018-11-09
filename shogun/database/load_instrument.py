@@ -114,7 +114,7 @@ def load_future(factory, root_symbol, start=None, end=None):
             start = pd.Timestamp(start, tz='UTC')
         if end is None:
             end = date.today()
-        end = pd.Timestamp(end)
+        end = pd.Timestamp(end, tz='UTC')
         logging.basicConfig(filename='./python_logs/write_future'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
         logging.info('Started')
         # Construct futures instruments data
@@ -248,7 +248,7 @@ def get_eikon_futures_data(platform_query, dt):
     for platform_symbol in platform_query['exchange_symbol'].keys():
         print(platform_symbol)
         exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
-        start = platform_query['start_date'][platform_symbol].strftime("%Y-%m-%d")
+        start = min(platform_query['start_date'][platform_symbol], dt).strftime("%Y-%m-%d")
         end = min(platform_query['last_trade'][platform_symbol], dt).strftime("%Y-%m-%d")
         if(today <= platform_query['last_trade'][platform_symbol]):
             tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
