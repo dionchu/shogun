@@ -133,7 +133,7 @@ def load_future(factory, root_symbol, start=None, end=None):
                                 periods=root_listing_dict['periods'][month_code],
                                 freq=root_listing_dict['frequency'][month_code])[0] + MonthBegin(n=-1)
 
-            root_chain_dict['last_trade'] = {factory.exchange_symbol_to_ticker(key): value for (key, value) in first_trade.items()}
+            root_chain_dict['first_trade'] = {factory.exchange_symbol_to_ticker(key): value for (key, value) in first_trade.items()}
 
         # combine information in dictionary
         platform_query = {
@@ -169,10 +169,20 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
                             {'root_symbol': root_symbol}
                             )['parent_calendar_id'].to_string(index=False)
 
-    # check if today is exchange holiday/weekend
-    if not trading_calendars.get_calendar(exchange_id).is_session(dt):
-        print('{dt} not a valid session: do nothing'.format(dt=dt.strftime("%Y-%m-%d")))
-        return
+    product_group_id = str(factory._future_root[
+                        factory._future_root['root_symbol'] == root_symbol
+                        ].set_index('root_symbol').to_dict()['child_calendar_id'][root_symbol])
+    # if missing, set to calendar default
+    if product_group_id == 'nan':
+        # check if today is exchange holiday/weekend
+        if not trading_calendars.get_calendar(exchange_id).is_session(dt):
+            print('{dt} not a valid session: do nothing'.format(dt=dt.strftime("%Y-%m-%d")))
+            return
+    else:
+        # check if today is exchange holiday/weekend
+        if not trading_calendars.get_calendar(exchange_id, product_group_id).is_session(dt):
+            print('{dt} not a valid session: do nothing'.format(dt=dt.strftime("%Y-%m-%d")))
+            return
 
     # compare todays list to existing FutureInstrument table
     database_contracts = read_hdf(dirname + '\_FutureInstrument.h5',where="root_symbol=" + root_symbol)
@@ -245,6 +255,7 @@ def get_eikon_futures_data(platform_query, dt):
     # Loop through symbols and pull raw data into data frame
     today = pd.Timestamp(date.today())
     data_df = pd.DataFrame()
+    dt = pd.Timestamp(dt.strftime("%Y-%m-%d"))
     for platform_symbol in platform_query['exchange_symbol'].keys():
         print(platform_symbol)
         exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
@@ -306,6 +317,9 @@ def construct_future_metadata(root_chain_df, root_info_dict, start_end_df):
         metadata_df = pd.concat([future_instrument_df,root_info_and_chain], join = "inner")
         metadata_df = pd.merge(metadata_df,start_end_df, on='exchange_symbol')
         metadata_df = pd.concat([future_instrument_df,metadata_df])
+        metadata_df['deliverable'] = metadata_df['deliverable'].astype(str).astype(float)
+        metadata_df['multiplier'] = metadata_df['multiplier'].astype(str).astype(float)
+        metadata_df['underlying_asset_class_id'] = metadata_df['underlying_asset_class_id'].astype(str).astype(float)
         metadata_df['delivery_month'] = metadata_df['delivery_month'].astype(str).astype(int)
         metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(int)
 
@@ -381,7 +395,15 @@ def check_missing_extra_days(factory, data_df):
         exchange_id = query_df(factory._future_root,
                                 {'root_symbol': root_symbol}
                                 )['parent_calendar_id'].to_string(index=False)
-        cal = trading_calendars.get_calendar(exchange_id)
+
+        product_group_id = str(factory._future_root[
+                        factory._future_root['root_symbol'] == root_symbol
+                        ].set_index('root_symbol').to_dict()['child_calendar_id'][root_symbol])
+        # if missing, set to calendar default
+        if product_group_id == 'nan':
+            cal = trading_calendars.get_calendar(exchange_id)
+        else:
+            cal = trading_calendars.get_calendar(exchange_id, product_group_id)
 
         expected = cal.sessions_in_range(grouped_df.get_group(exchange_symbol).index.values[0],
                                          grouped_df.get_group(exchange_symbol).index.values[-1]
@@ -414,7 +436,12 @@ def get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date,end_date):
     tmp_ohlcv.insert(0,'exchange_symbol',exchange_symbol)
     e = ek.get_data(eikon_symbol, ['TR.OPENINTEREST.Date', 'TR.OPENINTEREST'], {'SDate':str(oi_start),'EDate':str(end_date)})
     tmp_oi = pd.DataFrame({'open_interest': e[0]['Open Interest'].values}, index = pd.to_datetime(e[0]['Date'].values)).shift(1)
-    tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True)
+    if( tmp_oi.shape == (1, 1) ):
+        tmp_ohlcv['open_interest'] = pd.Series('NaN', index=tmp_ohlcv.index)
+        tmp = tmp_ohlcv
+        tmp['open_interest'] = tmp['open_interest'].astype(str).astype(float)
+    else:
+        tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True,how='left')
     return tmp
 
 def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_date):
@@ -430,11 +457,10 @@ def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_da
     end_date = pd.to_datetime(end_date)
     counter = 0
 
-    while int((end_date - start_date).days) > 1827:
-        temp_end_date = start_date + pd.DateOffset(years=5)
+    while int((end_date - start_date).days) > 730:
+        temp_end_date = start_date + pd.DateOffset(years=2)
         tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),temp_end_date.strftime("%Y-%m-%d"))
         data_df = data_df.append(tmp)
-        counter += 1
         start_date = temp_end_date
 
     tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),end_date.strftime("%Y-%m-%d"))

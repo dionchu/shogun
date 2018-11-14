@@ -117,6 +117,7 @@ class HdfDailyBarReader(SessionBarReader):
         debug_session = self.trading_calendar.sessions_in_range(start_date,end_date)
         if len(debug_session.difference(result_dates)) > 0:
             print(debug_session.difference(result_dates))
+            print(exchange_symbols)
         return out
 
     def get_value(self, exchange_symbol, dt, field):

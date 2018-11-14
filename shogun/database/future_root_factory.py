@@ -3,6 +3,7 @@ import trading_calendars
 from datetime import date, datetime, timedelta
 import pandas as pd
 from itertools import chain
+from functools import partial
 
 from .future_contract_day import FutureContractDay
 from pandas.errors import PerformanceWarning
@@ -278,8 +279,16 @@ class FutureRootFactory(object):
                                     {'root_symbol': root_symbol}
                                     )['parent_calendar_id'].to_string(index=False)
 
+            product_group_id = str(self._future_root[
+                                self._future_root['root_symbol'] == root_symbol
+                                ].set_index('root_symbol').to_dict()['child_calendar_id'][root_symbol])
+
             # Set up calendar and date rules
-            exchange_calendar = trading_calendars.get_calendar(exchange_id)
+            if product_group_id == 'nan':
+                exchange_calendar = trading_calendars.get_calendar(exchange_id)
+            else:
+                exchange_calendar = trading_calendars.get_calendar(exchange_id, product_group_id)
+
             exchange_holidays = exchange_calendar.regular_holidays.holidays()
             class ExchangeDay(CustomBusinessDay):
                 def __init__(self, n=1, normalize=False, weekmask='Mon Tue Wed Thu Fri',
@@ -304,6 +313,13 @@ class FutureRootFactory(object):
                 if dt.weekday() == 5 or dt.weekday() == 6 or dt in exchange_holidays:
                     return dt + EDay(1)
                 return dt
+
+            def previous_exchange_day_offset(n,dt):
+                """
+                If day falls on non-exchange day, use previous exchange instead;
+                """
+                dt = previous_exchange_day(dt)
+                return dt + EDay(n)
 
             # Obtain relevant contract rules, calculate dates and create pandas dataframe
             contract_rules = self._future_calendar_rules[self._future_calendar_rules['root_symbol'] == root_symbol]

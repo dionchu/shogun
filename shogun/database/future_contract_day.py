@@ -73,6 +73,11 @@ class FutureContractDay(object):
                     warnings.simplefilter("ignore", PerformanceWarning)
                     contract_dates += offset
 
+        if isinstance(contract_dates, pd.Timestamp) or isinstance(contract_dates, datetime.date):
+            contract_dates = pd.to_datetime(contract_dates.replace(day=self.day))#, utc=True)
+        else:
+            contract_dates = pd.to_datetime(contract_dates.to_series().apply(lambda dt: dt.replace(day=self.day)).values)#, utc=True)
+
         if self.observance is not None:
             if isinstance(reference_dates, pd.Timestamp) or isinstance(reference_dates, datetime.date):
                 contract_dates = self.observance(contract_dates)
