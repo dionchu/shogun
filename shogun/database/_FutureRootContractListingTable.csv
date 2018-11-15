@@ -10,7 +10,7 @@ HG,0,Q,None,None,23,M,0,---,None
 HG,0,U,None,None,60,M,1,FP,None
 HG,0,V,None,None,23,M,0,---,None
 HG,0,X,None,None,23,M,0,---,None
-HG,0,Z,None,None,60,M,1,---,None
+HG,0,Z,None,None,60,M,1,FP,None
 QC,1,F,None,None,23,M,1,LT-B(2),None
 QC,1,G,None,None,23,M,1,LT-B(2),None
 QC,1,H,None,None,60,M,1,LT-B(2),None

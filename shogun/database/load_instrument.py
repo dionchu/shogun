@@ -262,7 +262,11 @@ def get_eikon_futures_data(platform_query, dt):
         start = min(platform_query['start_date'][platform_symbol], dt).strftime("%Y-%m-%d")
         end = min(platform_query['last_trade'][platform_symbol], dt).strftime("%Y-%m-%d")
         if(today <= platform_query['last_trade'][platform_symbol]):
-            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
+            # where expiry is > than 5 years from now, Eikon uses two digit year convention
+            if int(exchange_symbol.split('_')[1][-2:]) > int(str(dt.year)[-2:]) + 5:
+                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0][:-1] + exchange_symbol.split('_')[1][-2:],exchange_symbol,start_date=start,end_date=end)
+            else:
+                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
         else:
             tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
         data_df = data_df.append(tmp)
@@ -442,7 +446,8 @@ def get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date,end_date):
         tmp['open_interest'] = tmp['open_interest'].astype(str).astype(float)
     else:
         tmp = pd.merge(tmp_ohlcv,tmp_oi,left_index=True,right_index=True,how='left')
-    return tmp
+
+    return tmp[~np.isnan(tmp['CLOSE'])]
 
 def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_date):
     """

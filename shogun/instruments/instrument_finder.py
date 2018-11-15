@@ -207,7 +207,7 @@ class InstrumentFinder(object):
     def _get_contract_exchange_symbols(self, root_symbol):
         return list(self._future_instrument[
                 self._future_instrument['root_symbol'] == root_symbol
-                ].index)
+                ].sort_values(by=['last_trade']).index)
 
     def _get_root_symbol_exchange(self, root_symbol):
         # assumes there are no dupes in _future_root

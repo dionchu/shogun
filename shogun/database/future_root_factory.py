@@ -316,9 +316,16 @@ class FutureRootFactory(object):
 
             def previous_exchange_day_offset(n,dt):
                 """
-                If day falls on non-exchange day, use previous exchange instead;
+                Offset previous exchange day;
                 """
                 dt = previous_exchange_day(dt)
+                return dt + EDay(n)
+
+            def next_exchange_day_offset(n,dt):
+                """
+                Offset next exchange day;
+                """
+                dt = next_exchange_day(dt)
                 return dt + EDay(n)
 
             # Obtain relevant contract rules, calculate dates and create pandas dataframe
