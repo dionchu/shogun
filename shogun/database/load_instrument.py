@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import logging
 import trading_calendars
+import time as time
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
 from .future_root_factory import FutureRootFactory
@@ -263,10 +264,10 @@ def get_eikon_futures_data(platform_query, dt):
         end = min(platform_query['last_trade'][platform_symbol], dt).strftime("%Y-%m-%d")
         if(today <= platform_query['last_trade'][platform_symbol]):
             # where expiry is > than 5 years from now, Eikon uses two digit year convention
-            if int(exchange_symbol.split('_')[1][-2:]) > int(str(dt.year)[-2:]) + 5:
-                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0][:-1] + exchange_symbol.split('_')[1][-2:],exchange_symbol,start_date=start,end_date=end)
-            else:
-                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
+#            if int(exchange_symbol.split('_')[1][-2:]) > int(str(dt.year)[-2:]) + 5:
+#                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0][:-1] + exchange_symbol.split('_')[1][-2:],exchange_symbol,start_date=start,end_date=end)
+#            else:
+            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
         else:
             tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
         data_df = data_df.append(tmp)
@@ -324,8 +325,8 @@ def construct_future_metadata(root_chain_df, root_info_dict, start_end_df):
         metadata_df['deliverable'] = metadata_df['deliverable'].astype(str).astype(float)
         metadata_df['multiplier'] = metadata_df['multiplier'].astype(str).astype(float)
         metadata_df['underlying_asset_class_id'] = metadata_df['underlying_asset_class_id'].astype(str).astype(float)
-        metadata_df['delivery_month'] = metadata_df['delivery_month'].astype(str).astype(int)
-        metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(int)
+        metadata_df['delivery_month'] = metadata_df['delivery_month'].astype(str).astype(float).astype(int)
+        metadata_df['delivery_year'] = metadata_df['delivery_year'].astype(str).astype(float).astype(int)
 
         metadata_df.set_index(['exchange_symbol'], append=True, inplace=True)
         metadata_df.reset_index(level=[0],drop=True,inplace=True)
@@ -467,6 +468,7 @@ def eikon_ohlcvoi_batch_retrieval(eikon_symbol,exchange_symbol,start_date,end_da
         tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),temp_end_date.strftime("%Y-%m-%d"))
         data_df = data_df.append(tmp)
         start_date = temp_end_date
+        time.sleep(0.5)
 
     tmp = get_eikon_ohlcv_oi(eikon_symbol,exchange_symbol,start_date.strftime("%Y-%m-%d"),end_date.strftime("%Y-%m-%d"))
     return data_df.append(tmp)

@@ -24,6 +24,7 @@ start_default = pd.Timestamp('1990-01-01', tz='UTC')
 end_base = pd.Timestamp('today', tz='UTC')
 end_default = end_base + pd.Timedelta(days=31)
 platform_default = 'RIC'
+ric_short_list = ['NG']
 
 MONTH_CODE = pd.Series(["F","G","H","J","K","M","N","Q","U","V","X","Z"], index=[1,2,3,4,5,6,7,8,9,10,11,12])
 MONTH_CODE_WRAP = pd.Series(
@@ -184,7 +185,10 @@ class FutureRootFactory(object):
 
         contract_day_df = pd.DataFrame.from_dict(contract_day_list_dict)
 
-        return pd.concat([symbol_df,contract_day_df],axis=1)
+        filtered_df = pd.concat([symbol_df,contract_day_df],axis=1)
+        filtered_df = filtered_df[filtered_df['last_trade']>start]
+
+        return filtered_df
 
 
     def calculate_contract_days(self, exchange_symbols):
@@ -423,6 +427,8 @@ class FutureRootFactory(object):
         platform : str
             platform for which to obtain ticker
         """
+        ric_short_list = ['NG']
+
         platform_symbol = self._platform_symbol_mapping[
                 (self._platform_symbol_mapping['exchange_symbol'] == root_symbol) & \
                 (self._platform_symbol_mapping['platform'] == platform)
@@ -435,13 +441,30 @@ class FutureRootFactory(object):
         if platform == "BBG":
             platform_tkr = platform_symbol+month_year_df['month']+[x[-2:] for x in y_list if len(x) > 2]
         elif platform == "RIC":
-            platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] for x in y_list if len(x) > 2]+"^"+[x[2] for x in y_list]
+            if root_symbol in ric_short_list:
+                platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] if int(x) < 2018 else x[-2:] for x in y_list]+"^"+[x[2] for x in y_list]
+            else:
+                platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] if int(x) < 2023 else x[-2:] for x in y_list]+"^"+[x[2] for x in y_list]
 
         return pd.DataFrame({'exchange_symbol': exchange_tkr.values, 'platform_symbol': platform_tkr.values,
                                  'delivery_month': month_year_df.index.month, 'delivery_year': month_year_df.index.year},
                                  index = month_year_df.index)
 
     def exchange_symbol_to_ticker(self, exchange_symbol, platform = platform_default):
+        """
+        Thomson has cutoff, using two digit code after 2023,
+        and after 2018 for certain tick symbols in the
+        ric_short_list
+
+        Calculate platform tickers for given exchange symbol
+        DataFrame
+        Parameters
+        ----------
+        exchange_symbol : str
+            exchange_symbol to find reference day for
+        platform : str
+            platform for which to obtain ticker
+        """
         root_symbol, suffix = exchange_symbol.split("_")
         platform_symbol = self._platform_symbol_mapping[
                 (self._platform_symbol_mapping['exchange_symbol'] == root_symbol) & \
@@ -451,6 +474,14 @@ class FutureRootFactory(object):
         if platform == "BBG":
             platform_tkr = platform_symbol+suffix
         elif platform == "RIC":
-            platform_tkr = platform_symbol+suffix[0]+suffix[-1]+"^"+suffix[1]
-
+            if root_symbol in ric_short_list:
+                if int(suffix[-2:]) < 18 or int(suffix[-2:]) > 80:
+                    platform_tkr = platform_symbol+suffix[0]+suffix[-1]+"^"+suffix[1]
+                else:
+                    platform_tkr = platform_symbol+suffix[0]+suffix[-2:]+"^"+suffix[1]
+            else:
+                if int(suffix[-2:]) < 23 or int(suffix[-2:]) > 80:
+                    platform_tkr = platform_symbol+suffix[0]+suffix[-1]+"^"+suffix[1]
+                else:
+                    platform_tkr = platform_symbol+suffix[0]+suffix[-2:]+"^"+suffix[1]
         return platform_tkr

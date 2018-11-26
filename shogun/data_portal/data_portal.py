@@ -52,7 +52,7 @@ OHLCVPOI_FIELDS = frozenset([
     "open", "high", "low", "close", "volume", "price", "open_interest"
 ])
 
-DEFAULT_DAILY_HISTORY_PREFETCH = 40
+DEFAULT_DAILY_HISTORY_PREFETCH = 0
 
 _DEF_D_HIST_PREFETCH = DEFAULT_DAILY_HISTORY_PREFETCH
 
@@ -772,7 +772,8 @@ class DataPortal(object):
         rf = self._roll_finders[continuous_future.roll_style]
         contract_exchange_symbol = rf.get_contract_center(continuous_future.root_symbol,
                                               dt,
-                                              continuous_future.offset)
+                                              continuous_future.offset,
+                                              continuous_future.active)
         if contract_exchange_symbol is None:
             return None
         return self.instrument_finder.retrieve_instrument(contract_exchange_symbol)

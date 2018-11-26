@@ -73,7 +73,7 @@ class FutureContractDay(object):
                     warnings.simplefilter("ignore", PerformanceWarning)
                     contract_dates += offset
 
-        if  self.day != 1:
+        if self.day != 1:
             if isinstance(contract_dates, pd.Timestamp) or isinstance(contract_dates, datetime.date):
                 contract_dates = pd.to_datetime(contract_dates.replace(day=self.day))#, utc=True)
             else:

@@ -152,7 +152,8 @@ class InstrumentFinder(object):
                                  root_symbol,
                                  offset,
                                  roll_style,
-                                 adjustment):
+                                 adjustment,
+                                 active=True):
 
         if adjustment not in ADJUSTMENT_STYLES:
             raise ValueError(
@@ -160,7 +161,7 @@ class InstrumentFinder(object):
                 '{}.'.format(adjustment, list(ADJUSTMENT_STYLES))
             )
 
-        oc = self.get_ordered_contracts(root_symbol)
+        oc = self.get_ordered_contracts(root_symbol,active)
         exchange = self._get_root_symbol_exchange(root_symbol)
 
         exchange_symbol = _generate_continuous_future_symbol(root_symbol, offset,
@@ -181,6 +182,7 @@ class InstrumentFinder(object):
             start_date=oc.start_date,
             end_date=oc.end_date,
             exchange_info=self.exchange_info[exchange],
+            active=active,
         )
 
         cf = cf_template(exchange_symbol=exchange_symbol)
@@ -193,14 +195,14 @@ class InstrumentFinder(object):
 
         return {None: cf, 'mul': mul_cf, 'add': add_cf}[adjustment]
 
-    def get_ordered_contracts(self, root_symbol, active=1):
+    def get_ordered_contracts(self, root_symbol, active=True):
         try:
-            return self._ordered_contracts[root_symbol]
+            return self._ordered_contracts[root_symbol+str(active)]
         except KeyError:
             contract_exchange_symbols = self._get_contract_exchange_symbols(root_symbol)
             contracts = deque(self.retrieve_all(contract_exchange_symbols))
             oc = OrderedContracts(root_symbol, contracts, active)
-            self._ordered_contracts[root_symbol] = oc
+            self._ordered_contracts[root_symbol+str(active)] = oc
             return oc
 
     # May need to implement some sorting

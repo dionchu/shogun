@@ -36,7 +36,8 @@ class ContinuousFutureSessionBarReader(SessionBarReader):
                 instrument.root_symbol,
                 start_date,
                 end_date,
-                instrument.offset
+                instrument.offset,
+                instrument.active,
             )
 
         num_sessions = len(
@@ -172,7 +173,8 @@ class ContinuousFutureSessionBarReader(SessionBarReader):
         rf = self._roll_finders[instrument.roll_style]
         sid = (rf.get_contract_center(instrument.root_symbol,
                                       dt,
-                                      instrument.offset))
+                                      instrument.offset,
+                                      instrument.active))
         if sid is None:
             return pd.NaT
         contract = rf.instrument_finder.retrieve_instrument(exchange_symbol)

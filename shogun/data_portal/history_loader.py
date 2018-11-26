@@ -226,7 +226,7 @@ class ContinuousFutureAdjustmentReader(object):
         partitions = []
 
         rolls = rf.get_rolls(cf.root_symbol, dts[0], dts[-1],
-                             cf.offset)
+                             cf.offset, cf.active)
 
         tc = self._trading_calendar
 

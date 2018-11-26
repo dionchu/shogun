@@ -50,7 +50,8 @@ class ContinuousFuture(object):
                 start_date,
                 end_date,
                 exchange_info,
-                adjustment=None):
+                adjustment=None,
+                active=True):
 
         self.exchange_symbol = exchange_symbol
         self.exchange_symbol_hash = hash(exchange_symbol)
@@ -61,6 +62,7 @@ class ContinuousFuture(object):
         self.start_date = start_date
         self.end_date = end_date
         self.adjustment = adjustment
+        self.active = active
 
     @property
     def exchange(self):
@@ -79,10 +81,11 @@ class ContinuousFuture(object):
             self.offset,
             self.roll_style,
             self.adjustment,
+            self.active,
         )
 
     def __repr__(self):
-        attrs = ('root_symbol', 'offset', 'roll_style', 'adjustment')
+        attrs = ('root_symbol', 'offset', 'roll_style', 'adjustment','active')
         tuples = ((attr, repr(getattr(self, attr, None)))
                   for attr in attrs)
         strings = ('%s=%s' % (t[0], t[1]) for t in tuples)
@@ -102,6 +105,7 @@ class ContinuousFuture(object):
             'offset': self.offset,
             'roll_style': self.roll_style,
             'exchange': self.exchange,
+            'active': self.active
         }
 
     @classmethod

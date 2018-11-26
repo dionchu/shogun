@@ -16,12 +16,12 @@ class RollFinder(with_metaclass(ABCMeta, object)):
     def _active_contract(self, oc, front, back, dt):
         raise NotImplementedError
 
-    def _get_active_contract_at_offset(self, root_symbol, dt, offset):
+    def _get_active_contract_at_offset(self, root_symbol, dt, offset, active):
         """
         For the given root symbol, find the contract that is considered active
         on a specific date at a specific offset.
         """
-        oc = self.instrument_finder.get_ordered_contracts(root_symbol)
+        oc = self.instrument_finder.get_ordered_contracts(root_symbol, active)
         session = self.trading_calendar.minute_to_session_label(dt)
         front = oc.contract_before_auto_close(session.value)
         back = oc.contract_at_offset(front, 1, dt.value)
@@ -30,7 +30,7 @@ class RollFinder(with_metaclass(ABCMeta, object)):
         primary = self._active_contract(oc, front, back, session)
         return oc.contract_at_offset(primary, offset, session.value)
 
-    def get_contract_center(self, root_symbol, dt, offset):
+    def get_contract_center(self, root_symbol, dt, offset, active):
         """
         Parameters
         ----------
@@ -46,9 +46,9 @@ class RollFinder(with_metaclass(ABCMeta, object)):
         Future
             The active future contract at the given dt.
         """
-        return self._get_active_contract_at_offset(root_symbol, dt, offset)
+        return self._get_active_contract_at_offset(root_symbol, dt, offset, active)
 
-    def get_rolls(self, root_symbol, start, end, offset):
+    def get_rolls(self, root_symbol, start, end, offset, active):
         """
         Get the rolls, i.e. the session at which to hop from contract to
         contract in the chain.
@@ -70,8 +70,8 @@ class RollFinder(with_metaclass(ABCMeta, object)):
             The last pair in the chain has a value of `None` since the roll
             is after the range.
         """
-        oc = self.instrument_finder.get_ordered_contracts(root_symbol)
-        front = self._get_active_contract_at_offset(root_symbol, end, 0)
+        oc = self.instrument_finder.get_ordered_contracts(root_symbol, active)
+        front = self._get_active_contract_at_offset(root_symbol, end, 0, active)
         back = oc.contract_at_offset(front, 1, end.value)
         if back is not None:
             end_session = self.trading_calendar.minute_to_session_label(end)
@@ -220,7 +220,7 @@ class VolumeRollFinder(RollFinder):
                 return back
         return front
 
-    def get_contract_center(self, root_symbol, dt, offset):
+    def get_contract_center(self, root_symbol, dt, offset, active):
         """
         Parameters
         ----------
@@ -249,7 +249,7 @@ class VolumeRollFinder(RollFinder):
             self.session_reader.last_available_dt,
         )
         rolls = self.get_rolls(
-            root_symbol=root_symbol, start=dt, end=end_date, offset=offset,
+            root_symbol=root_symbol, start=dt, end=end_date, offset=offset, active=active,
         )
         exchange_symbol, acd = rolls[0]
         return self.instrument_finder.retrieve_instrument(exchange_symbol)

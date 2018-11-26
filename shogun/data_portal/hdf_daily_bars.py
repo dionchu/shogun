@@ -106,6 +106,7 @@ class HdfDailyBarReader(SessionBarReader):
     def load_raw_arrays(self, columns, start_date, end_date, exchange_symbols):
         out = []
 #        print(start_date)
+        exchange_symbols = [t.exchange_symbol if type(t) is not str else t for t in exchange_symbols]
         for exchange_symbol in exchange_symbols:
             query = "date>=" + start_date.strftime("%Y%m%d") + \
                     " & date<=" + end_date.strftime("%Y%m%d") + \
@@ -146,4 +147,4 @@ class HdfDailyBarReader(SessionBarReader):
         if results.shape[0] == 0:
             raise NoDataOnDate("day={0} is outside of calendar={1}".format(
                 dt, self.trading_calendar.sessions_in_range(self._start_session, self._end_session)))
-        return results.iloc[0]['open']
+        return results.iloc[0][field]
