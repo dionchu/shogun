@@ -201,7 +201,9 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
         missing_root_info_dict = factory.retrieve_root_info(root_symbol)
         missing_root_chain_df = factory.make_root_chain(root_symbol,
                                                         pd.Timestamp(missing_contracts.index[0], tz='UTC'),
-                                                        pd.Timestamp(missing_contracts.index[-1], tz='UTC'))
+                                                        pd.Timestamp(missing_contracts.index[-1], tz='UTC'),
+                                                        filter=False)
+
         missing_root_chain_dict = missing_root_chain_df.set_index('platform_symbol').to_dict()
 
         if 'first_trade' not in missing_root_chain_df.columns:
@@ -236,6 +238,8 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
 
     # Loop through symbols and pull raw data into data frame
     data_df = get_eikon_futures_data(platform_query, dt)
+    # Check missing symbols from platform_query
+    check_missing_symbols(data_df,existing_contracts,missing_contracts)
     # Check missing days and days not expected
     check_missing_extra_days(factory, data_df.reset_index(level=[1]))
     # Append data to hdf, remove duplicates, and write to both hdf and csv
@@ -280,7 +284,7 @@ def get_eikon_futures_data(platform_query, dt):
 
 def write_to_instrument_table(dirname, data_df):
     # Append data to hdf, remove duplicates, and write to both hdf and csv
-    if os.path.isfile(dirname + "\_FutureInstrument.h5"):
+    if os.path.isfile(dirname + "\_InstrumentData.h5"):
         instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
         instrument_data_hdf = instrument_data_hdf.append(data_df)
         instrument_data_hdf = instrument_data_hdf[~instrument_data_hdf.index.duplicated(keep='last')]
@@ -389,6 +393,10 @@ def write_to_instrument_router(dirname, metadata_df):
                format='table', data_columns=True)
             instrument_router_df.to_csv(dirname + "\_InstrumentRouter.csv")
 
+def check_missing_symbols(data_df,existing_contracts,missing_contracts):
+    data_check = [x for x in existing_contracts.append(missing_contracts).exchange_symbol if x not in data_df.head(-10).index.get_level_values(level=1)]
+    if(len(data_check) > 0):
+        return "Missing data for:" + str(data_check)
 
 def check_missing_extra_days(factory, data_df):
 

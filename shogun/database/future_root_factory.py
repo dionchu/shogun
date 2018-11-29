@@ -131,7 +131,7 @@ class FutureRootFactory(object):
         cache[root_symbol] = root_dict
         return root_dict
 
-    def make_root_chain(self, root_symbol, start=None, end=None, platform=platform_default):
+    def make_root_chain(self, root_symbol, start=None, end=None, platform=platform_default, filter=True):
         """
         Generate root chain for a given root symbol and range.
         """
@@ -186,7 +186,8 @@ class FutureRootFactory(object):
         contract_day_df = pd.DataFrame.from_dict(contract_day_list_dict)
 
         filtered_df = pd.concat([symbol_df,contract_day_df],axis=1)
-        filtered_df = filtered_df[filtered_df['last_trade']>start]
+        if filter:
+            filtered_df = filtered_df[filtered_df['last_trade']>start]
 
         return filtered_df
 
@@ -444,7 +445,7 @@ class FutureRootFactory(object):
             if root_symbol in ric_short_list:
                 platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] if int(x) < 2018 else x[-2:] for x in y_list]+"^"+[x[2] for x in y_list]
             else:
-                platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] if int(x) < 2023 else x[-2:] for x in y_list]+"^"+[x[2] for x in y_list]
+                platform_tkr = platform_symbol+month_year_df['month']+[x[-1:] if int(x) < 2024 else x[-2:] for x in y_list]+"^"+[x[2] for x in y_list]
 
         return pd.DataFrame({'exchange_symbol': exchange_tkr.values, 'platform_symbol': platform_tkr.values,
                                  'delivery_month': month_year_df.index.month, 'delivery_year': month_year_df.index.year},
@@ -480,7 +481,7 @@ class FutureRootFactory(object):
                 else:
                     platform_tkr = platform_symbol+suffix[0]+suffix[-2:]+"^"+suffix[1]
             else:
-                if int(suffix[-2:]) < 23 or int(suffix[-2:]) > 80:
+                if int(suffix[-2:]) < 24 or int(suffix[-2:]) > 80:
                     platform_tkr = platform_symbol+suffix[0]+suffix[-1]+"^"+suffix[1]
                 else:
                     platform_tkr = platform_symbol+suffix[0]+suffix[-2:]+"^"+suffix[1]
