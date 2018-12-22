@@ -110,7 +110,7 @@ class HdfDailyBarReader(SessionBarReader):
         for exchange_symbol in exchange_symbols:
             query = "date>=" + start_date.strftime("%Y%m%d") + \
                     " & date<=" + end_date.strftime("%Y%m%d") + \
-                    " & exchange_symbol=" + exchange_symbol
+                    " & exchange_symbol=" + "\"" + exchange_symbol + "\""
             result = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
             result_dates = DatetimeIndex(result.index.get_level_values(0), dtype='datetime64[ns, UTC]')
             result = result[~result.index.get_level_values(0).isin(result_dates.difference(self.sessions))]
@@ -142,7 +142,7 @@ class HdfDailyBarReader(SessionBarReader):
         """
 #        exchange_symbol = instrument.exchange_symbol
 #        print(exchange_symbol)
-        query = "date=" + dt.strftime("%Y%m%d") + "& exchange_symbol=" + exchange_symbol
+        query = "date=" + dt.strftime("%Y%m%d") + "& exchange_symbol=" + "\"" + exchange_symbol + "\""
         results = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
         if results.shape[0] == 0:
             raise NoDataOnDate("day={0} is outside of calendar={1}".format(

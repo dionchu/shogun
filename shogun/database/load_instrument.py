@@ -143,6 +143,9 @@ def load_future(factory, root_symbol, start=None, end=None):
         'start_date': root_chain_dict['first_trade'],
         }
 
+        platform_query_df = pd.DataFrame.from_dict(platform_query)
+        platform_query = platform_query_df[platform_query_df['start_date'] <= end].to_dict()
+
         # Loop through symbols and pull raw data into data frame
         data_df = get_eikon_futures_data(platform_query, end)
         # Check missing days and days not expected
@@ -186,7 +189,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
             return
 
     # compare todays list to existing FutureInstrument table
-    database_contracts = read_hdf(dirname + '\_FutureInstrument.h5',where="root_symbol=" + root_symbol)
+    database_contracts = read_hdf(dirname + '\_FutureInstrument.h5',where="root_symbol=" + "\"" + root_symbol + "\"")
     current_listing = factory.get_contract_listing(root_symbol,dt)
     missing_contracts = current_listing[~current_listing.exchange_symbol.isin(database_contracts.index)]
     existing_contracts = current_listing[current_listing.exchange_symbol.isin(database_contracts.index)]
@@ -236,6 +239,9 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
         'start_date': existing_root_chain_dict['end_date'],
         }
 
+    platform_query_df = pd.DataFrame.from_dict(platform_query)
+    platform_query = platform_query_df[platform_query_df['start_date'] <= dt].to_dict()
+
     # Loop through symbols and pull raw data into data frame
     data_df = get_eikon_futures_data(platform_query, dt)
     # Check missing symbols from platform_query
@@ -266,15 +272,19 @@ def get_eikon_futures_data(platform_query, dt):
         exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
         start = min(platform_query['start_date'][platform_symbol], dt).strftime("%Y-%m-%d")
         end = min(platform_query['last_trade'][platform_symbol], dt).strftime("%Y-%m-%d")
-        if(today <= platform_query['last_trade'][platform_symbol]):
-            # where expiry is > than 5 years from now, Eikon uses two digit year convention
-#            if int(exchange_symbol.split('_')[1][-2:]) > int(str(dt.year)[-2:]) + 5:
-#                tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0][:-1] + exchange_symbol.split('_')[1][-2:],exchange_symbol,start_date=start,end_date=end)
-#            else:
-            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
-        else:
-            tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
-        data_df = data_df.append(tmp)
+        # RIC switches to expired RIC 4 calendar days after last trade
+        i = 0
+        while (i < 3):
+            try:
+                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(4)):
+                    tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
+                else:
+                    tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
+                data_df = data_df.append(tmp)                    
+                i = 3
+            except:
+                i = i + 1
+                print("trying again")
 
     # Change default column names to lower case
     data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
