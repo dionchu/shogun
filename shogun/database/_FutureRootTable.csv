@@ -14,8 +14,10 @@ FGBL,Euro Bund 10y,8.5 Year to 1.5 Year German Federal Government Bond,XEUR,EURE
 FGBX,Euro Buxl 30y,24 Year to 30 Year German Federal Government Bond,XEUR,EUREX,XEUR,EUBANK,1,DE,EUR,1000,0.02,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
 FOAM,Mid Term OAT,4.5 Year to 5.5 Year French Republic Government Bond,XEUR,EUREX,XEUR,EUBANK,1,FR,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
 FOAT,Long Term OAT,8.5 Year to10.5 Year French Republic Government Bond,XEUR,EUREX,XEUR,EUBANK,1,FR,EUR,1000,0.01,,17:14,17:15,vwap,exch,1,Delivery,12:29,12:30,exch,12:30,
-H,Medium Gilt,4 Year to 6.25 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,first_notice
-R,Long Gilt,8.75 Year to 13 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,first_notice
+H,Medium Gilt,4 Year to 6.25 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,last_trade
+R,Long Gilt,8.75 Year to 13 Year UK Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,last_trade
+G,Short Gilt Future,2 Year to 3.25 Year Short Term Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,last_trade
+U,Ultra Long Gilt,28 Year to 37 Year Gilts,IFEU,ICE,IFEU,UKBANK,1,GB,GBP,1000,0.01,,16:18,16:33,vwap,exch,1,Delivery,11:00,11:00,exch,11:00,last_trade
 UB,Ultra Treasury Bond,25 Year to 30 Year US Treasury Bonds,XCME,CBOT,XCME,,1,US,USD,1000,0.03125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
 ZB,30y Treasury Bond,15 Year to 25 Year US Treasury Bonds,XCME,CBOT,XCME,,1,US,USD,1000,0.03125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
 TN,Ultra 10y Treasury Note,9.5 Year to 10 Year US Treasury Note,XCME,CBOT,XCME,,1,US,USD,1000,0.03125,,13:59,14:00,vwap,exch,1,Delivery,12:00,12:01,exch,12:01,first_notice
@@ -77,3 +79,11 @@ BAX,3 Month Canadian Banker's Acceptance Futures,3 Month Canadian Banker's Accep
 MYJ,E-Micro JPY/USD,Japanese Yen,XCME,CME,XCME,FX,6,JP,USD,1250000,0.000001,,13:59,14:00,6J settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
 EC,Euro FX Futures,Euro,XCME,CME,XCME,FX,6,EU,USD,125000,0.00005,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
 M6E,E-micro Euro FX Futures,Euro,XCME,CME,XCME,FX,6,EU,USD,12500,0.0001,,13:59,14:00,6E settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+C1,Canadian Dollar Futures,Canadian Dollar,XCME,CME,XCME,FX,6,CAD,USD,100000,0.00005,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+MCD,E-micro Canadian Dollar Futures,Canadian Dollar,XCME,CME,XCME,FX,6,CAD,USD,10000,0.0001,,13:59,14:00,C1 settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+BP,British Pound Futures,British Pound,XCME,CME,XCME,FX,6,GBP,USD,62500,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+M6B,E-micro British Pound Futures,British Pound,XCME,CME,XCME,FX,6,GBP,USD,6250,0.0001,,13:59,14:00,BP settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+AD,Australian Dollar Futures,Australian Dollar,XCME,CME,XCME,FX,6,AUD,USD,100000,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+M6A,E-micro Australian Dollar Futures,Australian Dollar,XCME,CME,XCME,FX,6,AUD,USD,10000,0.0001,,13:59,14:00,AD settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+E1,Swiss Franc Futures,Swiss Franc,XCME,CME,XCME,FX,6,CHF,USD,125000,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+MSF,E-micro Swiss Franc Futures,Swiss Franc,XCME,CME,XCME,FX,6,CHF,USD,12500,0.0001,,13:59,14:00,E1 settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade

@@ -6,6 +6,7 @@ import trading_calendars
 import time as time
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
+ek.set_app_key('4ed8362c27f846d09376992fae22fd34dd1c8950')
 from .future_root_factory import FutureRootFactory
 
 from pandas import read_hdf
@@ -280,7 +281,7 @@ def get_eikon_futures_data(platform_query, dt):
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
                 else:
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
-                data_df = data_df.append(tmp)                    
+                data_df = data_df.append(tmp)
                 i = 3
             except:
                 i = i + 1
