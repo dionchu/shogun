@@ -427,3 +427,7 @@ U,first_notice,offset,MonthBegin(0)
 U,first_notice,offset,EDay(-2)
 U,last_notice,offset,MonthEnd(n=0)
 U,last_notice,offset,EDay(-1)
+FDAX,last_trade,offset,DateOffset(weekday=FR(3))
+FDAX,last_trade,observance,previous_exchange_day
+FDAX,settlement_date,offset,DateOffset(weekday=FR(3))
+FDAX,settlement_date,observance,previous_exchange_day
