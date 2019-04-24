@@ -50,10 +50,10 @@ FDXM,DAX 30 Index Mini,DAX Index,XEUR,EUREX,XEUR,XFRA,5,DE,EUR,5,1,,17:29,17:30,
 FTMIB,FTSE MIB Index,FTSE MIB,XMIL,MI,XMIL,,5,IT,EUR,5,5,,17:38,17:38,vwap last 5%,exch,0,SOQ,9:00,9:00,exch,9:05,
 BXF,BEL 20 Index,BEL 20,XBRU,ENX_Brussels,XBRU,,5,BE,EUR,10,0.5,,17:30,17:35,cspa,exch,0,EDSP (twap),15:40,16:00,exch,16:00,
 FCE,CAC 40 Index,CAC 40,XPAR,ENX_Paris,XPAR,,5,FR,EUR,10,0.5,,17:30,17:35,cspa,exch,0,EDSP (twap),15:40,16:00,exch,16:00,
-OBX,OBX Index,OBX Index,XOSL,OSE,XOSL,,5,NO,NOK,100,0.25,,16:20,16:25,cspa,exch,0,vwap,9:00,16:20,exch,16:20,
+OBX,OBX Index,OBX Index,XOSL,OSE,XOSL,,5,NO,NOK,100,0.25,,16:20,16:25,cspa,exch,0,vwap,9:00,16:20,exch,16:20,last_trade
 MIX,IBEX 35 mini,IBEX 35 Index,BMEX,MEFF,BMEX,,5,ES,EUR,1,1,,17:29,17:30,vwap,exch,0,IBEX 35 twap,16:15,16:45,exch,16:15,
 IBX,IBEX 35 Index,IBEX 35 Index,BMEX,MEFF,BMEX,,5,ES,EUR,10,1,,17:29,17:30,vwap,exch,0,IBEX 35 twap,16:15,16:45,exch,16:15,
-OMXS30,OMX Index,OMXS30 Index,XSTO,OMX,XSTO,,5,SE,SEK,100,0.25,,17:25,17:28,cspa,exch,0,OMXS30 vwap,9:00,17:00,exch,,
+OMXS30,OMX Index,OMXS30 Index,XSTO,OMX,XSTO,,5,SE,SEK,100,0.25,,17:25,17:28,cspa,exch,0,OMXS30 vwap,9:00,17:00,exch,17:00,last_trade
 FSMI,Swiss Market Index,Swiss Market Index (SMI) ,XEUR,EUREX,XEUR,XSWX,5,CH,CHF,10,1,,17:19,17:20,vwap,exch,0,SOQ,9:00,9:00,exch,9:00,
 Z,FTSE 100 Index,FTSE 100 Index,IFEU,ICE,IFEU,XLON,5,GB,GBP,10,0.5,,16:30,16:45,vwap,exch,0,LSE Intraday Auction,10:10,10:15,exch,10:15,
 FMRU,MSCI Russia Index,MSCI Russia Index,XEUR,EUREX,XEUR,MISX,5,RU,USD,50,0.1,,17:29,17:30,vwap,exch,0,Closing Value of Index,14:45,14:45,exch,22:00,
@@ -87,3 +87,10 @@ AD,Australian Dollar Futures,Australian Dollar,XCME,CME,XCME,FX,6,AU,USD,100000,
 M6A,E-micro Australian Dollar Futures,Australian Dollar,XCME,CME,XCME,FX,6,AU,USD,10000,0.0001,,13:59,14:00,AD settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
 E1,Swiss Franc Futures,Swiss Franc,XCME,CME,XCME,FX,6,CH,USD,125000,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
 MSF,E-micro Swiss Franc Futures,Swiss Franc,XCME,CME,XCME,FX,6,CH,USD,12500,0.0001,,13:59,14:00,E1 settle,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+CC,Cocoa Futures,Cocoa,IFUS,ICE,IFUS,SOFTS,7,US,USD,10,1,,13:30,13:30,last,exch,1,Delivery,13:29,13:30,exch,13:30,first_notice
+KC,Coffee Futures,Coffee,IFUS,ICE,IFUS,SOFTS,7,US,USD,375,0.05,,13:30,13:30,last,exch,1,Delivery,13:29,13:30,exch,13:30,first_notice
+ZC,Corn Futures,Corn,XCME,CBOT,XCME,GRAINS,7,US,USD,50,0.25,,13:14,13:15,vwap,exch,1,Delivery,12:00,12:01,exch,12:00,last_trade
+CT,Cotton No. 2 Futures,Cotton No. 2,IFUS,ICE,IFUS,SOFTS,7,US,USD,500,0.01,,14:20,14:20,last,exch,1,Delivery,14:20,14:20,exch,14:20,first_notice
+ZS,Soybean Futures,Soybean,XCME,CBOT,XCME,GRAINS,7,US,USD,50,0.25,,13:14,13:15,vwap,exch,1,Delivery,12:00,12:01,exch,12:00,last_trade
+SB,Sugar No. 11 Futures,Sugar No. 11,IFUS,ICE,IFUS,SOFTS,7,US,USD,1120,0.01,,13:00,13:00,last,exch,1,Delivery,13:00,13:00,exch,13:00,first_notice
+ZW,Chicago No. 2 Soft Red Winter Wheat,Soft Red Winter Wheat,XCME,CBOT,XCME,GRAINS,7,US,USD,50,0.25,,13:14,13:15,vwap,exch,1,Delivery,12:00,12:01,exch,12:00,last_trade

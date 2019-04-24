@@ -68,6 +68,15 @@ class EquitiesNotFound(ExchangeSymbolsNotFound):
             return "No equities found for exchange_symbols: {exchange_symbols}."
         return "No equity found for exchange_symbol: {exchange_symbols[0]}."
 
+class FixedIncomeNotFound(ExchangeSymbolsNotFound):
+    """
+    Raised when a call to `retrieve_fixed_income` fails to find an instrument.
+    """
+    @lazyval
+    def msg(self):
+        if self.plural:
+            return "No fixed income instruments found for exchange_symbols: {exchange_symbols}."
+        return "No fixed income instrument found for exchange_symbol: {exchange_symbols[0]}."
 
 class FutureContractsNotFound(ExchangeSymbolsNotFound):
     """
@@ -78,6 +87,16 @@ class FutureContractsNotFound(ExchangeSymbolsNotFound):
         if self.plural:
             return "No future contracts found for exchange_symbols: {exchange_symbols}."
         return "No future contract found for exchange_symbol: {exchange_symbols[0]}."
+
+class FutureOptionContractsNotFound(ExchangeSymbolsNotFound):
+    """
+    Raised when a call to `retrieve_future_option_contracts` fails to find an instrument.
+    """
+    @lazyval
+    def msg(self):
+        if self.plural:
+            return "No future option contracts found for exchange_symbols: {exchange_symbols}."
+        return "No future option contract found for exchange_symbol: {exchange_symbols[0]}."
 
 class HistoryWindowStartsBeforeData(ShogunError):
     msg = (

@@ -1,6 +1,12 @@
 from trading_calendars import get_calendar
 import math
 import numpy as np
+from string import ascii_lowercase
+LETTERS = {letter: str(index) for index, letter in enumerate(ascii_lowercase, start=1)}
+LETTERS['_'] = '0'
+
+#from .instrument_finder import InstrumentFinder
+#instrument_finder = InstrumentFinder()
 
 class Instrument(object):
     """
@@ -295,6 +301,14 @@ class Future(Instrument):
         else:
             self.auto_close_date = eval(auto_close_date)
 
+    def to_esid(self):
+        text = self.exchange_symbol
+        text = text.lower()
+
+        numbers = [LETTERS[character] if character in LETTERS else character for character in text]
+
+        return int(''.join(numbers))
+
     def to_dict(self):
         """
         Convert to a python dict.
@@ -322,47 +336,306 @@ class Future(Instrument):
         super_dict['delivery_month'] = self.delivery_month
         super_dict['delivery_year'] = self.delivery_year
 
+        return super_dict
 
-class Equity(Instrument):
+class FixedIncome(Instrument):
 
     _kwargnames = frozenset({
         'exchange_symbol',
-        'root_symbol',
         'instrument_name',
         'instrument_country_id',
         'underlying_name',
         'underlying_asset_class_id',
+        'type',
+        'face_value',
+        'settlement_days',
+        'coupon',
+        'day_counter',
+        'first_auction_date',
+        'issue_date',
+        'effective_date',
+        'maturity_date',
+        'period',
+        'redemption',
         'settle_start',
         'settle_end',
         'settle_method',
         'settle_timezone',
-        'final_settle_start',
-        'final_settle_end',
-        'final_settle_method',
-        'final_settle_timezone',
-        'last_trade_time'
         'quote_currency_id',
         'multiplier',
         'tick_size',
         'start_date',
         'end_date',
-        'first_trade',
-        'last_trade',
-        'first_position',
-        'last_position',
-        'first_notice',
-        'last_notice',
-        'first_delivery',
-        'last_delivery',
-        'settlement_date',
-        'volume_switch_date',
-        'open_interest_switch_date',
-        'auto_close_date',
         'exchange_info',
         'parent_calendar_id',
         'child_calendar_id'
-        'average_pricing',
-        'deliverable',
-        'delivery_month',
-        'delivery_year',
     })
+
+    def __init__(self,
+                exchange_symbol="",
+                instrument_name="",
+                instrument_country_id="",
+                underlying_name="",
+                underlying_asset_class_id="",
+                type=None,
+                face_value=100,
+                settlement_days=1,
+                coupon=None,
+                day_counter="Act/Act",
+                first_auction_date=None,
+                issue_date=None,
+                effective_date=None,
+                maturity_date=None,
+                period="Semiannual",
+                redemption=100,
+                settle_start=None,
+                settle_end=None,
+                settle_method=None,
+                settle_timezone=None,
+                quote_currency_id="",
+                multiplier=.01,
+                tick_size=0.000001,
+                start_date=None,
+                end_date=None,
+                exchange_info=None,
+                parent_calendar_id=None,
+                child_calendar_id=None):
+
+        super().__init__(
+            exchange_symbol=exchange_symbol,
+            instrument_name=instrument_name,
+            instrument_country_id=instrument_country_id,
+            underlying_name=underlying_name,
+            underlying_asset_class_id=underlying_asset_class_id,
+            settle_start=settle_start,
+            settle_end=settle_end,
+            settle_method=settle_method,
+            settle_timezone=settle_timezone,
+            quote_currency_id=quote_currency_id,
+            multiplier=multiplier,
+            tick_size=tick_size,
+            start_date=start_date,
+            end_date=end_date,
+            exchange_info = exchange_info,
+            parent_calendar_id=parent_calendar_id,
+            child_calendar_id=child_calendar_id
+        )
+        self.type = type
+        self.face_value = face_value
+        self.settlement_days = settlement_days
+        self.coupon = coupon
+        self.day_counter = day_counter
+        self.first_auction_date = first_auction_date
+        self.issue_date = issue_date
+        self.effective_date = effective_date
+        self.maturity_date = maturity_date
+        self.period = period
+        self.redemption = redemption
+    """
+    period:
+        Daily
+        Weekly
+        Biweekly
+        EveryFourthWeek
+        Monthly
+        Bimonthly
+        Quarterly
+        EveryFourthMonth
+        Semiannual
+        Annual
+        Once
+        NoFrequency
+    dy_counter:
+        Act/Act
+        Act/365
+        Act/360
+        Thirty360
+    """
+    def to_esid(self):
+        """
+        Convert exchange symbol to a number.
+        """
+        text = self.exchange_symbol
+        text = text.lower()
+
+        numbers = [LETTERS[character] if character in LETTERS else character for character in text]
+
+        return int(''.join(numbers))
+
+    def to_dict(self):
+        """
+        Convert to a python dict.
+        """
+        super_dict = super(FixedIncome, self).to_dict()
+        super_dict['type'] = self.type
+        super_dict['face_value'] = self.face_value
+        super_dict['settlement_days'] = self.settlement_days
+        super_dict['coupon'] = self.coupon
+        super_dict['first_auction_date'] = self.first_auction_date
+        super_dict['issue_date'] = self.issue_date
+        super_dict['effective_date'] = self.effective_date
+        super_dict['maturity_date'] = self.maturity_date
+        super_dict['period'] = self.period
+        super_dict['redemption'] = self.redemption
+
+        return super_dict
+
+class Equity(Instrument):
+    _kwargnames = frozenset({
+        'exchange_symbol',
+        'instrument_name',
+        'instrument_country_id',
+        'underlying_name',
+        'underlying_asset_class_id',
+        'type',
+        'settle_start',
+        'settle_end',
+        'settle_method',
+        'settle_timezone',
+        'quote_currency_id',
+        'multiplier',
+        'tick_size',
+        'start_date',
+        'end_date',
+        'exchange_info',
+        'parent_calendar_id',
+        'child_calendar_id'
+    })
+
+    def __init__(self,
+                exchange_symbol="",
+                instrument_name="",
+                instrument_country_id="",
+                underlying_name="",
+                underlying_asset_class_id="",
+                type=None,
+                settle_start=None,
+                settle_end=None,
+                settle_method=None,
+                settle_timezone=None,
+                quote_currency_id="",
+                multiplier=1,
+                tick_size=0.01,
+                start_date=None,
+                end_date=None,
+                exchange_info=None,
+                parent_calendar_id=None,
+                child_calendar_id=None):
+
+        super().__init__(
+            exchange_symbol=exchange_symbol,
+            instrument_name=instrument_name,
+            instrument_country_id=instrument_country_id,
+            underlying_name=underlying_name,
+            underlying_asset_class_id=underlying_asset_class_id,
+            settle_start=settle_start,
+            settle_end=settle_end,
+            settle_method=settle_method,
+            settle_timezone=settle_timezone,
+            quote_currency_id=quote_currency_id,
+            multiplier=multiplier,
+            tick_size=tick_size,
+            start_date=start_date,
+            end_date=end_date,
+            exchange_info = exchange_info,
+            parent_calendar_id=parent_calendar_id,
+            child_calendar_id=child_calendar_id
+        )
+        self.type = type
+
+    def to_esid(self):
+        """
+        Convert exchange symbol to a number.
+        """
+        text = self.exchange_symbol
+        text = text.lower()
+
+        numbers = [LETTERS[character] if character in LETTERS else character for character in text]
+
+        return int(''.join(numbers))
+
+    def to_dict(self):
+        """
+        Convert to a python dict.
+        """
+        """
+        Convert to a python dict.
+        """
+        super_dict = super(Equity, self).to_dict()
+        super_dict['type'] = self.type
+
+        return super_dict
+
+class FutureOption(Instrument):
+
+    _kwargnames = frozenset({
+        'exchange_symbol',
+        'root_symbol',
+        'instrument_name',
+        'underlying_future',
+        'expiry_date',
+        'strike',
+        'call_put',
+        'tick_size',
+        'start_date',
+        'end_date',
+    })
+
+    def __init__(self,
+                exchange_symbol="",
+                root_symbol="",
+                instrument_name="",
+                underlying_future=None,
+                expiry_date=None,
+                strike=None,
+                call_put = None,
+                tick_size=None,
+                start_date=None,
+                end_date=None):
+
+        super().__init__(
+            exchange_symbol=exchange_symbol,
+            instrument_name=instrument_name,
+            instrument_country_id=underlying_future.instrument_country_id,
+            underlying_name=underlying_future.underlying_name,
+            underlying_asset_class_id=underlying_future.underlying_asset_class_id,
+            settle_start=underlying_future.settle_start,
+            settle_end=underlying_future.settle_end,
+            settle_method=underlying_future.settle_method,
+            settle_timezone=underlying_future.settle_timezone,
+            quote_currency_id=underlying_future.quote_currency_id,
+            multiplier=underlying_future.multiplier,
+            tick_size=tick_size if tick_size is not None else underlying_future.tick_size/2,
+            start_date=start_date,
+            end_date=end_date,
+            exchange_info = underlying_future.exchange_info,
+            parent_calendar_id=underlying_future.parent_calendar_id,
+            child_calendar_id=underlying_future.child_calendar_id
+        )
+
+        self.underlying_future = underlying_future
+        self.root_symbol = root_symbol
+        self.expiry_date = expiry_date
+        self.strike = strike
+        self.call_put = call_put
+
+    def to_esid(self):
+        text = self.exchange_symbol
+        text = text.lower()
+
+        numbers = [LETTERS[character] if character in LETTERS else character for character in text]
+
+        return int(''.join(numbers))
+
+    def to_dict(self):
+        """
+        Convert to a python dict.
+        """
+        super_dict = super(FutureOption, self).to_dict()
+        super_dict['root_symbol'] = self.root_symbol
+        super_dict['underlying_future'] = self.underlying_future
+        super_dict['strike'] = self.strike
+        super_dict['call_put'] = self.call_put
+        super_dict['expiry_date'] = self.expiry_date
+
+        return super_dict

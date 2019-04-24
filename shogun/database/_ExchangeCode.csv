@@ -68,3 +68,6 @@ ECB,ECB Exchange Rates,Frankfurt,XECB,XECB
 XETRA_Stocks,Xetra Regulierter,Frankfurt,XETA,XETR
 XETRA_Bonds,Eurex Bonds,Frankfurt,XEUB,XETR
 OSE,Oslo Bors,Oslo,XOSL,XOSL
+USBOND,US Treasury OTC,New_York,USBOND,USBOND
+BATS,CBOE BZX U.S. Equities Exchange,New_York,BATS,XCBO
+BATY,CBOE BYX U.S. Equities Exchange,New_York,BATY,XCBO

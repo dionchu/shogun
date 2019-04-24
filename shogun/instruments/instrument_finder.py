@@ -16,10 +16,12 @@ from shogun.utils.functional import invert
 from shogun.errors import (
     EquitiesNotFound,
     FutureContractsNotFound,
+    FutureOptionContractsNotFound,
+    FixedIncomeNotFound,
     SymbolsNotFound,
 )
 from .instrument import (
-    Instrument, Equity, Future,
+    Instrument, Equity, Future, FixedIncome, FutureOption,
 )
 from .continuous_futures import(
     ADJUSTMENT_STYLES,
@@ -49,6 +51,10 @@ _instrument_timestamp_fields = frozenset({
     'settlement_date',
     'volume_switch_date',
     'open_interest_switch_date',
+    'first_auction_date',
+    'issue_date',
+    'effective_date',
+    'maturity_date',
 })
 
 def _convert_instrument_timestamp_fields(dict_):
@@ -78,7 +84,9 @@ def _filter_kwargs(names, dict_):
     return {k: v for k, v in dict_.items() if k in names and v is not None}
 
 _filter_future_kwargs = _filter_kwargs(Future._kwargnames)
+_filter_future_option_kwargs = _filter_kwargs(FutureOption._kwargnames)
 _filter_equity_kwargs = _filter_kwargs(Equity._kwargnames)
+_filter_fixed_income_kwargs = _filter_kwargs(FixedIncome._kwargnames)
 
 def _generate_continuous_future_symbol(root_symbol,
                                                 offset,
@@ -120,7 +128,9 @@ class InstrumentFinder(object):
         self._future_contract_listing = pd.read_csv(dirname + "\..\database\_FutureRootContractListingTable.csv")
         self._future_root = pd.read_csv(dirname + "\..\database\_FutureRootTable.csv")
         self._future_instrument = read_hdf(dirname + "\..\database\_FutureInstrument.h5")
-        self._equity_instrument = pd.DataFrame()
+        self._future_option_instrument = pd.read_csv(dirname + "\..\database\_FutureOptionInstrument.csv").set_index('exchange_symbol')
+        self._fixed_income_instrument = read_hdf(dirname + "\..\database\_FixedIncomeInstrument.h5")
+        self._equity_instrument = read_hdf(dirname + "\..\database\_EquityInstrument.h5")
         self._instrument_router = read_hdf(dirname +'\..\database\_InstrumentRouter.h5')
         self._instrument_cache = {}
         self._instrument_type_cache = {}
@@ -282,6 +292,12 @@ class InstrumentFinder(object):
         update_hits(
             self.retrieve_futures_contracts(type_to_instruments.pop('Future', ()))
         )
+        update_hits(
+            self.retrieve_future_option_contracts(type_to_instruments.pop('FutureOption', ()))
+        )
+        update_hits(
+            self.retrieve_fixed_income(type_to_instruments.pop('FixedIncome', ()))
+        )
 
         # We shouldn't know about any other asset types.
         if type_to_instruments:
@@ -380,6 +396,44 @@ class InstrumentFinder(object):
         """
         return self._retrieve_instruments(exchange_symbols, self._future_instrument, Future)
 
+    def retrieve_future_option_contracts(self, exchange_symbols):
+        """
+        Retrieve FutureOption objects for a list of exchange_symbols.
+        Users generally shouldn't need to this method (instead, they should
+        prefer the more general/friendly `retrieve_instrument`), but it has a
+        documented interface and tests because it's used upstream.
+        Parameters
+        ----------
+        sids : list[str]
+        Returns
+        -------
+        futures : dict[int -> Future]
+        Raises
+        ------
+        FutureOptionContractsNotFound
+            When any requested instrument isn't found.
+        """
+        return self._retrieve_instruments(exchange_symbols, self._future_option_instrument, FutureOption)
+
+    def retrieve_fixed_income(self, exchange_symbols):
+        """
+        Retrieve FixedIncome objects for a list of exchange_symbols.
+        Users generally shouldn't need to this method (instead, they should
+        prefer the more general/friendly `retrieve_instruments`), but it has a
+        documented interface and tests because it's used upstream.
+        Parameters
+        ----------
+        exchange_symbols : list[str]
+        Returns
+        -------
+        equities : dict[int -> Equity]
+        Raises
+        ------
+        FixedIncomeNotFound
+            When any requested instrument isn't found.
+        """
+        return self._retrieve_instruments(exchange_symbols, self._fixed_income_instrument, FixedIncome)
+
     def _retrieve_instruments(self, exchange_symbols, instrument_hdf, instrument_type):
         """
         Internal function for loading instruments from a table.
@@ -406,17 +460,34 @@ class InstrumentFinder(object):
         hits = {}
 
         querying_equities = issubclass(instrument_type, Equity)
+        querying_futures = issubclass(instrument_type, Future)
+        querying_fixed_income = issubclass(instrument_type, FixedIncome)
+        querying_future_option = issubclass(instrument_type, FutureOption)
         filter_kwargs = (
             _filter_equity_kwargs
             if querying_equities else
             _filter_future_kwargs
+            if querying_futures else
+            _filter_fixed_income_kwargs
+            if querying_fixed_income else
+            _filter_future_option_kwargs
         )
 
-        rows = self._retrieve_instrument_dicts(exchange_symbols, instrument_hdf)
-        for row in rows:
-            exchange_symbol = row['exchange_symbol']
-            instrument = instrument_type(**filter_kwargs(row))
-            hits[exchange_symbol] = cache[exchange_symbol] = instrument
+        # FutureOption instruments take a Future object as an input, hack here
+        if querying_future_option:
+            rows = self._retrieve_instrument_dicts(exchange_symbols, instrument_hdf)
+            for row in rows:
+                underlying_future_symbol = row['underlying_future']
+                row['underlying_future'] = self.retrieve_instrument(underlying_future_symbol)
+                exchange_symbol = row['exchange_symbol']
+                instrument = instrument_type(**filter_kwargs(row))
+                hits[exchange_symbol] = cache[exchange_symbol] = instrument
+        else:
+            rows = self._retrieve_instrument_dicts(exchange_symbols, instrument_hdf)
+            for row in rows:
+                exchange_symbol = row['exchange_symbol']
+                instrument = instrument_type(**filter_kwargs(row))
+                hits[exchange_symbol] = cache[exchange_symbol] = instrument
 
         # If we get here, it means something in our code thought that a
         # particular sid was an equity/future and called this function with a
@@ -426,8 +497,13 @@ class InstrumentFinder(object):
         if misses:
             if querying_equities:
                 raise EquitiesNotFound(exchange_symbols=misses)
-            else:
+            elif querying_futures:
                 raise FutureContractsNotFound(exchange_symbols=misses)
+            elif querying_fixed_income:
+                raise FixedIncomeNotFound(exchange_symbols=misses)
+            else:
+                raise FutureOptionContractsNotFound(exchange_symbols=misses)
+
         return hits
 
     def _retrieve_instrument_dicts(self, exchange_symbols, instrument_hdf):
@@ -436,7 +512,10 @@ class InstrumentFinder(object):
 
         def mkdict(row, exchanges=self.exchange_info):
             d = dict(row)
-            d['exchange_info'] = exchanges[d.pop('exchange_id')]
+            if 'exchange_id' in d:
+                d['exchange_info'] = exchanges[d.pop('exchange_id')]
+            elif 'exchange_info' in d:
+                d['exchange_info'] = exchanges[d.pop('exchange_info')]
             return d
 
         for instruments in group_into_chunks(exchange_symbols):
@@ -476,10 +555,11 @@ class NotInstrumentConvertible(ValueError):
 class PricingDataAssociable(with_metaclass(ABCMeta)):
     """
     ABC for types that can be associated with pricing data.
-    Includes Instrument, Future, ContinuousFuture
+    Includes Instrument, Future, ContinuousFuture, FixedIncome
     """
     pass
 
 PricingDataAssociable.register(Instrument)
 PricingDataAssociable.register(Future)
 PricingDataAssociable.register(ContinuousFuture)
+PricingDataAssociable.register(FixedIncome)

@@ -108,6 +108,50 @@ def rebuild_metadata(factory, root_symbol, start=None, end=None):
         write_to_instrument_router(dirname, metadata_df)
         return metadata_df
 
+def load_exchange_symbol(factory, fetch_symbols, root_symbol):
+        """
+        write exchange symbol to table.
+        """
+        end = date.today()
+        if not isinstance(fetch_symbols, (list,)):
+            fetch_symbols = [fetch_symbols]
+        root_chain_df = factory.make_root_chain(root_symbol, start=None)
+        root_chain_df = root_chain_df[root_chain_df['exchange_symbol'].isin(fetch_symbols)]
+        root_info_dict = factory.retrieve_root_info(root_symbol)
+        root_chain_dict = root_chain_df.set_index('platform_symbol').to_dict()
+        root_listing_df = query_df(factory._future_contract_listing, {'root_symbol': root_symbol})
+        root_listing_dict = root_listing_df.set_index('delivery_month').to_dict()
+
+        if 'first_trade' not in root_chain_df.columns:
+            first_trade = {}
+            d = root_chain_df.set_index('exchange_symbol').to_dict()
+            for exchange_symbol in root_chain_df.exchange_symbol:
+                month_code = exchange_symbol[-3:][0]
+                first_trade[exchange_symbol] = pd.date_range(end = d['last_trade'][exchange_symbol],
+                                periods=root_listing_dict['periods'][month_code],
+                                freq=root_listing_dict['frequency'][month_code])[0] + MonthBegin(n=-1)
+
+            root_chain_dict['first_trade'] = {factory.exchange_symbol_to_ticker(key): value for (key, value) in first_trade.items()}
+
+        # combine information in dictionary
+        platform_query = {
+        'last_trade': root_chain_dict['last_trade'],
+        'exchange_symbol': root_chain_dict['exchange_symbol'],
+        'start_date': root_chain_dict['first_trade'],
+        }
+        # Loop through symbols and pull raw data into data frame
+        data_df = get_eikon_futures_data(platform_query, end)
+        # Check missing days and days not expected
+        check_missing_extra_days(factory, data_df.reset_index(level=[1]))
+        # Append data to hdf, remove duplicates, and write to both hdf and csv
+        write_to_instrument_table(dirname, data_df)
+        # Construct and write metadata for missing contracts
+        start_end_df = calc_start_end_dates(data_df)
+        metadata_df = construct_future_metadata(root_chain_df, root_info_dict, start_end_df)
+        write_to_future_instrument(dirname, metadata_df)
+        # Write to instrument router
+        write_to_instrument_router(dirname, metadata_df)
+
 def load_future(factory, root_symbol, start=None, end=None):
         """
         write new future instruments to table.
