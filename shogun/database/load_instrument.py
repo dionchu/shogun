@@ -141,6 +141,10 @@ def load_exchange_symbol(factory, fetch_symbols, root_symbol):
         }
         # Loop through symbols and pull raw data into data frame
         data_df = get_eikon_futures_data(platform_query, end)
+        # If no data, exit, otherwise will overwrite database to empty
+        if len(data_df) ==0:
+            print("empty data set")
+            return
         # Check missing days and days not expected
         check_missing_extra_days(factory, data_df.reset_index(level=[1]))
         # Append data to hdf, remove duplicates, and write to both hdf and csv
@@ -321,7 +325,7 @@ def get_eikon_futures_data(platform_query, dt):
         i = 0
         while (i < 3):
             try:
-                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(4)):
+                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(days=4)):
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
                 else:
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)

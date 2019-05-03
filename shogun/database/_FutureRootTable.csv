@@ -94,3 +94,5 @@ CT,Cotton No. 2 Futures,Cotton No. 2,IFUS,ICE,IFUS,SOFTS,7,US,USD,500,0.01,,14:2
 ZS,Soybean Futures,Soybean,XCME,CBOT,XCME,GRAINS,7,US,USD,50,0.25,,13:14,13:15,vwap,exch,1,Delivery,12:00,12:01,exch,12:00,last_trade
 SB,Sugar No. 11 Futures,Sugar No. 11,IFUS,ICE,IFUS,SOFTS,7,US,USD,1120,0.01,,13:00,13:00,last,exch,1,Delivery,13:00,13:00,exch,13:00,first_notice
 ZW,Chicago No. 2 Soft Red Winter Wheat,Soft Red Winter Wheat,XCME,CBOT,XCME,GRAINS,7,US,USD,50,0.25,,13:14,13:15,vwap,exch,1,Delivery,12:00,12:01,exch,12:00,last_trade
+MP,Mexican Peso Futures,Mexican Peso,XCME,CME,XCME,FX,6,MX,USD,500000,0.00001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
+NE,New Zealand Dollar Futures,New Zealand Dollar,XCME,CME,XCME,FX,6,NZ,USD,100000,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade

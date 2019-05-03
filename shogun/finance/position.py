@@ -35,7 +35,7 @@ class Position(object):
         that we can pay out the correct amount on the dividend's pay date.
         """
         return {
-            'amount': self.amount * dividend.amount
+            'amount': self.amount * dividend.dividend
         }
 
     def earn_stock_dividend(self, stock_dividend):

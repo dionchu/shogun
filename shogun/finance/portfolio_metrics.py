@@ -16,7 +16,8 @@ class Transaction(object):
         self.dt = dt
         self.price = price
         self.commission = commission
-        self.multiplier = multiplier
+#        self.multiplier = multiplier
+        self.multiplier = self.instrument.multiplier
         self.broker_order_id = broker_order_id
 
     def __getitem__(self, name):
@@ -86,7 +87,7 @@ class InnerPosition(object):
                 self.cost_basis,
                 self.realized_pnl,
                 self.unrealized_pnl,
-                self.comission,
+                self.commission,
                 self.last_sale_price,
                 self.last_sale_date,
             )
@@ -123,13 +124,13 @@ class Position(object):
         Register the number of shares we held at this dividend's ex date so
         that we can pay out the correct amount on the dividend's pay date.
         """
-        self.dividend += self.amount * dividend.amount
+        self.dividend += self.amount * dividend.dividend
 
         return {
             'instrument': self.instrument,
             'holding': self.amount,
-            'dividend': dividend.amount,
-            'amount': self.amount * dividend.amount
+            'dividend': dividend.dividend,
+            'amount': self.amount * dividend.dividend
         }
 
     def update(self, txn):
@@ -183,6 +184,7 @@ class Position(object):
                 self.last_sale_date = session
                 self.unrealized_pnl = (self.last_sale_price - self.cost_basis) * self.amount * self.multiplier
             except:
+                print(self.instrument.exchange_symbol + ' ' + session.strftime("%Y-%m-%d") + ' missing')
                 pass
 
     def to_dict(self):

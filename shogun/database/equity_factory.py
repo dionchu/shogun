@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from itertools import chain
 from functools import partial
+from copy import deepcopy
 
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import *
@@ -86,12 +87,7 @@ class EquityFactory(object):
         return self._traded_equities
 
     def construct_us_equity_metadata(self, df):
-
-            df['settle_start'] = '16:00'
-            df['settle_end'] = '16:00'
-            df['settle_method'] = 'auction'
-            df['settle_timezone'] = 'exch'
-            df['quote_currency_id'] = 'USD'
+            df = deepcopy(df)
             df['multiplier'] = 1
             df['tick_size'] = 0.01
             df['start_date'] = default_start
