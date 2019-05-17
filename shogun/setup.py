@@ -1,4 +1,5 @@
 #python setup.py build_ext --inplace
+# This is a test comment to test merging py3.7 and py3.6
 
 import setuptools  # important
 from distutils.core import setup
