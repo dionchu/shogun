@@ -52,13 +52,9 @@ class PerformanceAnalysis(object):
         the end date in yyyy-mm-dd format
     """
 
-    def __init__(self, start_date, end_date, trading_calendar, instrument_finder): # add , portfolio or something similar
+    def __init__(self, start_date, end_date, trading_calendar, instrument_finder, strategy_dict=None, pnl_dict=None): # add , portfolio or something similar
         self.start_date = start_date
         self.end_date = end_date
-        self.strategy_dict = OrderedDict()
-        self.pnl_dict = OrderedDict()
-        self.trading_sessions = pd.date_range(start_date, end_date, freq=pd.offsets.BDay())
-        self.daily_pnl = pd.DataFrame(np.nan, index=self.trading_sessions, columns=['realized','commission'])
         self.trading_calendar = trading_calendar
         self.instrument_finder = instrument_finder
         self._bar_reader = HdfDailyBarReader(self.trading_calendar)
@@ -72,7 +68,19 @@ class PerformanceAnalysis(object):
         blotter_end = max(self._blotter.Trade_Date).strftime('%Y-%m-%d')
         self._dividend = pd.read_hdf(dirname + '\_EquityDividend.h5', where='ex_date >\'' + blotter_start + '\' & ex_date <=\'' + blotter_end + '\'')
         self._platform_symbol_mapping = pd.read_csv(dirname + '\_PlatformSymbolMapping.csv')
-
+        if strategy_dict and pnl_dict:
+            self.strategy_dict = strategy_dict
+            self.pnl_dict = pnl_dict
+            start_timestamp = sum(pnl_dict.values()).index[-1]+1
+            self.trading_sessions = pd.date_range(start_timestamp.strftime('%Y-%m-%d'), end_date, freq=pd.offsets.BDay())
+        elif (strategy_dict is not None and pnl_dict is None) or (pnl_dict is not None and strategy_dict is None):
+            print("Error: both strategy_dict and pnl_dict must be provided or none")
+            return
+        else:
+            self.strategy_dict = OrderedDict()
+            self.pnl_dict = OrderedDict()
+            self.trading_sessions = pd.date_range(start_date, end_date, freq=pd.offsets.BDay())
+        
     def get_blotter(self):
         """
         Retrieve transaction data from portfolio transactions database
@@ -153,6 +161,43 @@ class PerformanceAnalysis(object):
             sub = self._blotter.groupby('Strategy').get_group(strategy)
             strategy_tracker = Strategy()
             daily_pnl = pd.DataFrame(np.nan, index=self.trading_sessions, columns=['realized','unrealized','commission','dividend'])
+
+            for session in self.trading_sessions:
+                sub_session = sub.loc[sub['Trade_Date'] == session.strftime('%Y-%m-%d')]
+                sub_div = self._dividend.loc[self._dividend['ex_date'] == session.strftime('%Y-%m-%d')]
+
+                # Dividend must be processed before transactions
+                for i in range(len(sub_div)):
+                    div_row = sub_div.iloc[i]
+                    div_instrument = self.instrument_finder.retrieve_instrument(sub_div.index[i])
+                    strategy_tracker.process_dividend(div_instrument, div_row)
+
+                for i in range(len(sub_session)):
+                    row = sub_session.iloc[i]
+                    amt = row['Trade_Volume'] if row['Buy_Sell'] == 'B' else -row['Trade_Volume']
+                    exchange_symbol = self.translate_instrument(row.Instrument, session)
+                    shogun_instrument = self.instrument_finder.retrieve_instrument(exchange_symbol)
+                    txn = Transaction(shogun_instrument, amt, pd.Timestamp(row.Trade_Date), row['Agreed_Price'], row['Total_Fee'], row['Multiplier'])
+                    strategy_tracker.execute_transaction(txn)
+
+                strategy_tracker.refresh(session, self._bar_reader)
+                daily_pnl.loc[session].realized = strategy_tracker.realized_pnl
+                daily_pnl.loc[session].unrealized = strategy_tracker.unrealized_pnl
+                daily_pnl.loc[session].commission = strategy_tracker.commission
+                daily_pnl.loc[session].dividend = strategy_tracker.dividend
+
+            daily_pnl['sum'] = daily_pnl.sum(axis=1)
+            self.strategy_dict[strategy] = strategy_tracker
+            self.pnl_dict[strategy] = daily_pnl
+
+    def update_transactions(self):
+        strategy_list = list(self._blotter.groupby('Strategy').groups.keys())
+
+        for strategy in strategy_list:
+            sub = self._blotter.groupby('Strategy').get_group(strategy)
+            strategy_tracker = self.strategy_dict[strategy]
+            daily_pnl = self.pnl_dict[strategy]
+            daily_pnl = daily_pnl.append(pd.DataFrame(np.nan, index=self.trading_sessions, columns=['realized','unrealized','commission','dividend']))
 
             for session in self.trading_sessions:
                 sub_session = sub.loc[sub['Trade_Date'] == session.strftime('%Y-%m-%d')]
