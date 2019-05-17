@@ -61,6 +61,9 @@ class HdfDailyBarReader(SessionBarReader):
     """
     def __init__(self, calendar, start_session=None, end_session=None, read_all_threshold= 3000):
         self.df = read_hdf(dirname+'\\_InstrumentData.h5')
+        # append option data here as a hack because we haven't fully ingested options yet	
+        self.option_df = pd.read_hdf(dirname+'\\_OptionData.h5')	
+        self.df = self.df.append(self.option_df)
         if not start_session:
             start_session = max(pd.Timestamp(min(self.df.index.get_level_values(0)),tz='UTC'),calendar.first_session)
         if not end_session:

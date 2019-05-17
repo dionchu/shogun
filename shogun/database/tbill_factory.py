@@ -102,7 +102,7 @@ class TBillFactory(object):
         else:
             query = select([self._issuance]).where(and_(self._issuance.columns.Type == 'BILL',
                             self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d'),
-                            self._issuance.columns.AuctionDate <= date.strftime('%Y-%m-%d')))
+                            self._issuance.columns.AuctionDate < date.strftime('%Y-%m-%d')))
 
         ResultProxy = connection.execute(query)
         ResultSet = ResultProxy.fetchall()

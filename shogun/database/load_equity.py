@@ -243,7 +243,7 @@ def check_missing_extra_days(factory, data_df):
     grouped_df = data_df.groupby('exchange_symbol')
 
     for exchange_symbol in grouped_df.groups:
-        exchange_id = 'USBOND'
+        exchange_id = 'XNYS'
         cal = trading_calendars.get_calendar(exchange_id)
 
         expected = cal.sessions_in_range(grouped_df.get_group(exchange_symbol).index.values[0],
@@ -384,3 +384,4 @@ def _convert_dividend_timestamp_fields(df):
     for key in _dividend_timestamp_fields:
         df[key] = pd.to_datetime(df[key])
     return df
+    

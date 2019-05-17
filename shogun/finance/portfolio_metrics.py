@@ -183,6 +183,7 @@ class Position(object):
                 self.last_sale_date = session
                 self.unrealized_pnl = (self.last_sale_price - self.cost_basis) * self.amount * self.multiplier
             except:
+                print(self.instrument.exchange_symbol + ' ' + session.strftime("%Y-%m-%d") + ' missing')
                 pass
 
     def to_dict(self):
