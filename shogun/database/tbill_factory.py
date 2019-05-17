@@ -23,7 +23,8 @@ import mysql.connector
 from sqlalchemy import Table, MetaData, select
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 platform_default = 'RIC'
 
@@ -64,7 +65,6 @@ tbill_metadata_df = pd.DataFrame(columns = metadata_columns)
 class TBillFactory(object):
     """A Treasury Bill factory is an object that creates specific TBill
     instrument instances for writing into the FixedIncome table.
-
     Parameters
     ----------
     root_symbol : str or None
@@ -102,7 +102,7 @@ class TBillFactory(object):
         else:
             query = select([self._issuance]).where(and_(self._issuance.columns.Type == 'BILL',
                             self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d'),
-                            self._issuance.columns.AuctionDate < date.strftime('%Y-%m-%d')))
+                            self._issuance.columns.AuctionDate <= date.strftime('%Y-%m-%d')))
 
         ResultProxy = connection.execute(query)
         ResultSet = ResultProxy.fetchall()

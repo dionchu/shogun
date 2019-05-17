@@ -15,7 +15,8 @@ from pandas import HDFStore,DataFrame
 from shogun.utils.query_utils import query_df
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 import logging
 
@@ -99,7 +100,7 @@ def rebuild_metadata(factory, root_symbol, start=None, end=None):
         root_chain_df = factory.make_root_chain(root_symbol, start)
         root_info_dict = factory.retrieve_root_info(root_symbol)
 
-        data_df = read_hdf(dirname +'\_InstrumentData.h5')
+        data_df = read_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.h5')
 
         start_end_df = calc_start_end_dates(data_df)
         metadata_df = construct_future_metadata(root_chain_df, root_info_dict, start_end_df)
@@ -107,54 +108,6 @@ def rebuild_metadata(factory, root_symbol, start=None, end=None):
         # Write to instrument router
         write_to_instrument_router(dirname, metadata_df)
         return metadata_df
-
-def load_exchange_symbol(factory, fetch_symbols, root_symbol):
-        """
-        write exchange symbol to table.
-        """
-        end = date.today()
-        if not isinstance(fetch_symbols, (list,)):
-            fetch_symbols = [fetch_symbols]
-        root_chain_df = factory.make_root_chain(root_symbol, start=None)
-        root_chain_df = root_chain_df[root_chain_df['exchange_symbol'].isin(fetch_symbols)]
-        root_info_dict = factory.retrieve_root_info(root_symbol)
-        root_chain_dict = root_chain_df.set_index('platform_symbol').to_dict()
-        root_listing_df = query_df(factory._future_contract_listing, {'root_symbol': root_symbol})
-        root_listing_dict = root_listing_df.set_index('delivery_month').to_dict()
-
-        if 'first_trade' not in root_chain_df.columns:
-            first_trade = {}
-            d = root_chain_df.set_index('exchange_symbol').to_dict()
-            for exchange_symbol in root_chain_df.exchange_symbol:
-                month_code = exchange_symbol[-3:][0]
-                first_trade[exchange_symbol] = pd.date_range(end = d['last_trade'][exchange_symbol],
-                                periods=root_listing_dict['periods'][month_code],
-                                freq=root_listing_dict['frequency'][month_code])[0] + MonthBegin(n=-1)
-
-            root_chain_dict['first_trade'] = {factory.exchange_symbol_to_ticker(key): value for (key, value) in first_trade.items()}
-
-        # combine information in dictionary
-        platform_query = {
-        'last_trade': root_chain_dict['last_trade'],
-        'exchange_symbol': root_chain_dict['exchange_symbol'],
-        'start_date': root_chain_dict['first_trade'],
-        }
-        # Loop through symbols and pull raw data into data frame
-        data_df = get_eikon_futures_data(platform_query, end)
-        # If no data, exit, otherwise will overwrite database to empty
-        if len(data_df) ==0:
-            print("empty data set")
-            return
-        # Check missing days and days not expected
-        check_missing_extra_days(factory, data_df.reset_index(level=[1]))
-        # Append data to hdf, remove duplicates, and write to both hdf and csv
-        write_to_instrument_table(dirname, data_df)
-        # Construct and write metadata for missing contracts
-        start_end_df = calc_start_end_dates(data_df)
-        metadata_df = construct_future_metadata(root_chain_df, root_info_dict, start_end_df)
-        write_to_future_instrument(dirname, metadata_df)
-        # Write to instrument router
-        write_to_instrument_router(dirname, metadata_df)
 
 def load_future(factory, root_symbol, start=None, end=None):
         """
@@ -238,7 +191,7 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
             return
 
     # compare todays list to existing FutureInstrument table
-    database_contracts = read_hdf(dirname + '\_FutureInstrument.h5',where="root_symbol=" + "\"" + root_symbol + "\"")
+    database_contracts = read_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.h5',where="root_symbol=" + "\"" + root_symbol + "\"")
     current_listing = factory.get_contract_listing(root_symbol,dt)
     missing_contracts = current_listing[~current_listing.exchange_symbol.isin(database_contracts.index)]
     existing_contracts = current_listing[current_listing.exchange_symbol.isin(database_contracts.index)]
@@ -325,7 +278,7 @@ def get_eikon_futures_data(platform_query, dt):
         i = 0
         while (i < 3):
             try:
-                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(days=4)):
+                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(4)):
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
                 else:
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
@@ -343,21 +296,21 @@ def get_eikon_futures_data(platform_query, dt):
 
 def write_to_instrument_table(dirname, data_df):
     # Append data to hdf, remove duplicates, and write to both hdf and csv
-    if os.path.isfile(dirname + "\_InstrumentData.h5"):
-        instrument_data_hdf = read_hdf(dirname +'\_InstrumentData.h5')
+    if os.path.isfile("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.h5"):
+        instrument_data_hdf = read_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.h5')
         instrument_data_hdf = instrument_data_hdf.append(data_df)
         instrument_data_hdf = instrument_data_hdf[~instrument_data_hdf.index.duplicated(keep='last')]
         instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
-        instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
+        instrument_data_hdf.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.h5', 'InstrumentData', mode = 'w',
            format='table', data_columns=True)
-        instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
+        instrument_data_hdf.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.csv")
     else:
         print("Table does not exist! Writing new. ")
         instrument_data_hdf = data_df.drop_duplicates()
         instrument_data_hdf.sort_index(level=['date','exchange_symbol'], ascending=[1, 0], inplace=True)
-        instrument_data_hdf.to_hdf(dirname +'\_InstrumentData.h5', 'InstrumentData', mode = 'w',
+        instrument_data_hdf.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.h5', 'InstrumentData', mode = 'w',
                         format='table', data_columns=True)
-        instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
+        instrument_data_hdf.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentData.csv")
 
 def calc_start_end_dates(data_df):
     # Reset index to columns
@@ -403,9 +356,9 @@ def write_to_future_instrument(dirname, metadata_df=None, existing_contracts=Non
     if metadata_df is None and existing_contracts is None:
         return
     else:
-        if os.path.isfile(dirname + "\_FutureInstrument.h5"):
+        if os.path.isfile("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.h5"):
 
-            future_instrument_hdf = read_hdf(dirname +'\_FutureInstrument.h5')
+            future_instrument_hdf = read_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.h5')
 
             # update end dates in future instrument
             if existing_contracts is not None:
@@ -417,15 +370,15 @@ def write_to_future_instrument(dirname, metadata_df=None, existing_contracts=Non
                 future_instrument_hdf = future_instrument_hdf.append(metadata_df)
 
             future_instrument_hdf = future_instrument_hdf[~future_instrument_hdf.index.duplicated(keep='last')]
-            future_instrument_hdf.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
+            future_instrument_hdf.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
                format='table', data_columns=True)
-            future_instrument_hdf.to_csv(dirname + "\_FutureInstrument.csv")
+            future_instrument_hdf.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.csv")
         else:
             if metadata_df is not None:
                 metadata_df = _convert_instrument_timestamp_fields(metadata_df)
-                metadata_df.to_hdf(dirname +'\_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
+                metadata_df.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.h5', 'FutureInstrument', mode = 'w',
                    format='table', data_columns=True)
-                metadata_df.to_csv(dirname + "\_FutureInstrument.csv")
+                metadata_df.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_FutureInstrument.csv")
 
 
 def write_to_instrument_router(dirname, metadata_df):
@@ -435,22 +388,22 @@ def write_to_instrument_router(dirname, metadata_df):
     else:
         instrument_router_df = pd.DataFrame({'instrument_type': ['Future']}, index=metadata_df.index)
 
-        if os.path.isfile(dirname + "\_InstrumentRouter.h5"):
-            instrument_router_hdf = read_hdf(dirname +'\_InstrumentRouter.h5')
+        if os.path.isfile("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.h5"):
+            instrument_router_hdf = read_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.h5')
             if instrument_router_hdf is not None:
                 instrument_router_hdf = instrument_router_hdf.append(instrument_router_df)
                 instrument_router_hdf = instrument_router_hdf[~instrument_router_hdf.index.duplicated(keep='last')]
-                instrument_router_hdf.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
+                instrument_router_hdf.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
                    format='table', data_columns=True)
-                instrument_router_hdf.to_csv(dirname + "\_InstrumentRouter.csv")
+                instrument_router_hdf.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.csv")
             else:
-                instrument_router_df.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
+                instrument_router_df.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
                    format='table', data_columns=True)
-                instrument_router_df.to_csv(dirname + "\_InstrumentRouter.csv")
+                instrument_router_df.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.csv")
         else:
-            instrument_router_df.to_hdf(dirname +'\_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
+            instrument_router_df.to_hdf('C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.h5', 'InstrumentRouter', mode = 'w',
                format='table', data_columns=True)
-            instrument_router_df.to_csv(dirname + "\_InstrumentRouter.csv")
+            instrument_router_df.to_csv("C:/Users/micha/Peng Legal Dropbox/Michael Peng/HDF/_InstrumentRouter.csv")
 
 def check_missing_symbols(data_df,existing_contracts,missing_contracts):
     data_check = [x for x in existing_contracts.append(missing_contracts).exchange_symbol if x not in data_df.head(-10).index.get_level_values(level=1)]

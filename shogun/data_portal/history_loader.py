@@ -15,14 +15,14 @@ from shogun.lib.adjustment import Float64Multiply, Float64Add
 
 from shogun.instruments.instrument import Equity, Future
 from shogun.instruments.continuous_futures import ContinuousFuture
-from zipline.lib._int64window import AdjustedArrayWindow as Int64Window
-from zipline.lib._float64window import AdjustedArrayWindow as Float64Window
-from zipline.lib.adjustment import Float64Multiply, Float64Add
-from zipline.utils.cache import ExpiringCache
-from zipline.utils.math_utils import number_of_decimal_places
+from shogun.lib._int64window import AdjustedArrayWindow as Int64Window
+from shogun.lib._float64window import AdjustedArrayWindow as Float64Window
+from shogun.lib.adjustment import Float64Multiply, Float64Add
+from shogun.utils.cache import ExpiringCache # Missing and needed to copy from Zipline Github. Also added context_tricks.py, paths.py (needed to change zipline references to shogun)
+from shogun.utils.math_utils import number_of_decimal_places # Missing and needed to copy from Zipline Github
 from shogun.utils.memoize import lazyval
-from zipline.utils.numpy_utils import float64_dtype
-from zipline.utils.pandas_utils import find_in_sorted_index, normalize_date
+from shogun.utils.numpy_utils import float64_dtype # Missing and needed to copy from Zipline Github
+from shogun.utils.pandas_utils import find_in_sorted_index, normalize_date
 
 # Default number of decimal places used for rounding instrument prices.
 DEFAULT_INSTRUMENT_PRICE_DECIMALS = 3

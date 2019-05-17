@@ -6,7 +6,8 @@ from trading_calendars import get_calendar
 import warnings
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 def delivery_predicate(codes, contract):
     # This relies on symbols that are construct following a pattern of
@@ -192,7 +193,7 @@ class OrderedContracts(object):
     """
 
     def __init__(self, root_symbol, contracts, active=True):
-        self._future_contract_listing = pd.read_csv(dirname + "\..\database\_FutureRootContractListingTable.csv")
+        self._future_contract_listing = pd.read_csv(dirname + "\_FutureRootContractListingTable.csv")
 
         self.root_symbol = root_symbol
 

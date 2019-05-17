@@ -4,7 +4,6 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from itertools import chain
 from functools import partial
-from copy import deepcopy
 
 from pandas.errors import PerformanceWarning
 from pandas.tseries.offsets import *
@@ -24,7 +23,8 @@ import mysql.connector
 from sqlalchemy import Table, MetaData, select
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 platform_default = 'RIC'
 default_start = pd.Timestamp('2000-01-01')
@@ -62,7 +62,6 @@ equity_metadata_df = pd.DataFrame(columns = metadata_columns)
 class EquityFactory(object):
     """An Equity factory is an object that creates specific Equity
     instrument instances for writing into the Equity table.
-
     Parameters
     ----------
     root_symbol : str or None
@@ -87,7 +86,12 @@ class EquityFactory(object):
         return self._traded_equities
 
     def construct_us_equity_metadata(self, df):
-            df = deepcopy(df)
+
+            df['settle_start'] = '16:00'
+            df['settle_end'] = '16:00'
+            df['settle_method'] = 'auction'
+            df['settle_timezone'] = 'exch'
+            df['quote_currency_id'] = 'USD'
             df['multiplier'] = 1
             df['tick_size'] = 0.01
             df['start_date'] = default_start

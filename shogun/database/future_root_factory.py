@@ -33,7 +33,7 @@ MONTH_CODE_WRAP = pd.Series(
 SERIAL_CODE = ["F","G","J","K","N","Q","V","X"]
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
 
 
 def get_front_month_suffix(listed_months, date, offset = 0):
@@ -103,15 +103,15 @@ class FutureRootFactory(object):
     """
     ## what happens if there are duplicate roots?
     def __init__(self):
-        self._country_code = pd.read_csv(dirname + "\_CountryCode.csv", keep_default_na=False)
-        self._asset_class = pd.read_csv(dirname + "\_AssetClass.csv")
-        self._currency_code = pd.read_csv(dirname + "\_CurrencyCode.csv")
-        self._exchange_code = pd.read_csv(dirname + "\_ExchangeCode.csv")
-        self._financial_center = pd.read_csv(dirname + "\_FinancialCenter.csv")
-        self._future_contract_listing = pd.read_csv(dirname + "\_FutureRootContractListingTable.csv")
-        self._future_root = pd.read_csv(dirname + "\_FutureRootTable.csv")
-        self._platform_symbol_mapping = pd.read_csv(dirname + "\_PlatformSymbolMapping.csv")
-        self._future_calendar_rules = pd.read_csv(dirname + "\_FutureRootContractCalendarRules.csv")
+        self._country_code = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\/Michael Peng/HDF/_CountryCode.csv", keep_default_na=False)
+        self._asset_class = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_AssetClass.csv")
+        self._currency_code = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_CurrencyCode.csv")
+        self._exchange_code = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_ExchangeCode.csv")
+        self._financial_center = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_FinancialCenter.csv")
+        self._future_contract_listing = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_FutureRootContractListingTable.csv")
+        self._future_root = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_FutureRootTable.csv")
+        self._platform_symbol_mapping = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_PlatformSymbolMapping.csv")
+        self._future_calendar_rules = pd.read_csv("D:\\MFP Dropbox\Michael Peng (mpeng)\\HDF\\_FutureRootContractCalendarRules.csv")
 
         self._root_cache = {}
         self._root_contract_days = {}

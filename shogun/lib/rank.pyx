@@ -19,7 +19,7 @@ from numpy cimport (
 from numpy import apply_along_axis, float64, isnan, nan, zeros_like
 from scipy.stats import rankdata
 
-from zipline.utils.numpy_utils import (
+from shogun.utils.numpy_utils import (
     is_missing,
     float64_dtype,
     int64_dtype,

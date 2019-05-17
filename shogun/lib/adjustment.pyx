@@ -7,7 +7,7 @@ cimport numpy as np
 from numpy cimport float64_t, uint8_t, int64_t
 from numpy import asarray, datetime64, float64, int64, bool_, uint8
 
-from zipline.utils.compat import unicode
+from shogun.utils.compat import unicode
 
 
 ADJUSTMENT_KIND_NAMES = {
@@ -860,7 +860,7 @@ cdef class ObjectOverwrite(_ObjectAdjustment):
 
     cpdef mutate(self, object data):
         # data is an object here because this is intended to be used with a
-        # `zipline.lib.LabelArray`.
+        # `shogun.lib.LabelArray`.
 
         # We don't do this in a loop because we only want to look up the label
         # code in the array's categories once.

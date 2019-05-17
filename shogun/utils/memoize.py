@@ -16,7 +16,7 @@ class classlazyval(lazyval):
     computed until needed, and that the value should be memoized.
     Example
     -------
-    >>> from zipline.utils.memoize import classlazyval
+    >>> from shogun.utils.memoize import classlazyval
     >>> class C(object):
     ...     count = 0
     ...     @classlazyval

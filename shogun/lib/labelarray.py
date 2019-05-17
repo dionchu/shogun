@@ -10,23 +10,23 @@ from numpy import ndarray
 import pandas as pd
 from toolz import compose
 
-from zipline.utils.compat import unicode
-from zipline.utils.functional import instance
-from zipline.utils.preprocess import preprocess
-from zipline.utils.sentinel import sentinel
-from zipline.utils.input_validation import (
+from shogun.utils.compat import unicode
+from shogun.utils.functional import instance
+from shogun.utils.preprocess import preprocess
+from shogun.utils.sentinel import sentinel
+from shogun.utils.input_validation import (
     coerce,
     expect_kinds,
     expect_types,
     optional,
 )
-from zipline.utils.numpy_utils import (
+from shogun.utils.numpy_utils import (
     bool_dtype,
     unsigned_int_dtype_with_size_in_bytes,
     is_object,
     object_dtype,
 )
-from zipline.utils.pandas_utils import ignore_pandas_nan_categorical_warning
+from shogun.utils.pandas_utils import ignore_pandas_nan_categorical_warning
 
 from ._factorize import (
     factorize_strings,

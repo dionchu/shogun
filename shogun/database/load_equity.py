@@ -17,7 +17,8 @@ from pandas import HDFStore,DataFrame
 from shogun.utils.query_utils import query_df
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 import logging
 
@@ -237,17 +238,22 @@ def write_to_instrument_table(dirname, data_df):
         instrument_data_hdf.to_csv(dirname + "\_InstrumentData.csv")
 
 def check_missing_extra_days(factory, data_df):
+
 #    data_df.reset_index(level=[0], inplace=True)
     grouped_df = data_df.groupby('exchange_symbol')
+
     for exchange_symbol in grouped_df.groups:
-        exchange_id = 'XNYS'
+        exchange_id = 'USBOND'
         cal = trading_calendars.get_calendar(exchange_id)
+
         expected = cal.sessions_in_range(grouped_df.get_group(exchange_symbol).index.values[0],
                                          grouped_df.get_group(exchange_symbol).index.values[-1]
                                          )
         actual = pd.DatetimeIndex(grouped_df.get_group(exchange_symbol).index.values, tz='UTC')
+
         extra = set(actual).difference(expected)
         missing = set(expected).difference(actual)
+
         if len(extra) >0:
             print("{exchange_symbol} did not expect: {extra}".format(exchange_symbol=exchange_symbol, extra=set([d.strftime("%Y-%m-%d") for d in extra])))
             logging.info("{exchange_symbol} did not expect: {extra}".format(exchange_symbol=exchange_symbol, extra=set([d.strftime("%Y-%m-%d") for d in extra])))
@@ -260,7 +266,7 @@ def check_missing_symbols(data_df,existing_instruments,missing_instruments):
     if(len(data_check) > 0):
         return "Missing data for:" + str(data_check)
 
-def get_eikon_dividend_data(platform_query, dt, start_override = None):
+def get_eikon_dividend_data(platform_query, dt):
     # Loop through symbols and pull raw data into data frame
     today = pd.Timestamp(date.today())
     data_df = pd.DataFrame()
@@ -268,23 +274,20 @@ def get_eikon_dividend_data(platform_query, dt, start_override = None):
     for platform_symbol in platform_query['exchange_symbol'].keys():
         print(platform_symbol)
         exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
-        if not start_override:
-            start = min(platform_query['start_date'][platform_symbol], dt).strftime("%Y-%m-%d")
-        else:
-            start = start_override
+        start = min(platform_query['start_date'][platform_symbol], dt).strftime("%Y-%m-%d")
         end = dt.strftime("%Y-%m-%d")
         if platform_query['type'][platform_symbol] == 'ETF':
             tmp, err = ek.get_data(platform_symbol, ["TR.FundExDate", "TR.FundRecordDate", "TR.FundPayDate", "TR.FundDiv", "TR.FundDivCurr"], {'SDate':str(start),'EDate':str(end)})
         else:
             tmp, err = ek.get_data(platform_symbol, ["TR.DivExDate", "TR.DivRecordDate", "TR.DivPayDate", "TR.DivUnadjustedGross", "TR.DivCurr"], {'SDate':str(start),'EDate':str(end)})
-        tmp.columns = ['exchange_symbol', 'ex_date', 'record_date', 'pay_date', 'dividend', 'currency']
+        tmp.columns = ['exchange_symbol', 'ex_date', 'record_date', 'pay_date', 'amount', 'currency']
         tmp['exchange_symbol'] = exchange_symbol
-        if len(tmp) > 1 and not math.isnan(tmp.iloc[0]['dividend']):
+        if len(tmp) > 1 and not math.isnan(tmp.iloc[0]['amount']):
             data_df = data_df.append(tmp)
 
     # Change default column names to lower case
     if len(data_df) > 0:
-        data_df.columns = ['exchange_symbol', 'ex_date', 'record_date', 'pay_date', 'dividend', 'currency']
+        data_df.columns = ['exchange_symbol', 'ex_date', 'record_date', 'pay_date', 'amount', 'currency']
         data_df.set_index(['exchange_symbol'], append=True, inplace=True)
         data_df = data_df.reset_index(drop=True, level = 0)
     else:

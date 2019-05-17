@@ -2,7 +2,7 @@ from pandas import read_hdf, DatetimeIndex
 from trading_calendars import get_calendar
 import pandas as pd
 import os
-dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 from shogun.utils.memoize import lazyval
 from shogun.data_portal.session_bars import SessionBarReader
@@ -60,11 +60,7 @@ class HdfDailyBarReader(SessionBarReader):
     - Exchange_symbol is the exchange_symbol of the row.
     """
     def __init__(self, calendar, start_session=None, end_session=None, read_all_threshold= 3000):
-        self.df = read_hdf(dirname +'\..\database\_InstrumentData.h5')
-        # append option data here as a hack because we haven't fully ingested options yet
-        self.option_df = pd.read_hdf(dirname + '\..\database\_OptionData.h5')
-        self.df = self.df.append(self.option_df)
-
+        self.df = read_hdf(dirname+'\\_InstrumentData.h5')
         if not start_session:
             start_session = max(pd.Timestamp(min(self.df.index.get_level_values(0)),tz='UTC'),calendar.first_session)
         if not end_session:
@@ -115,7 +111,7 @@ class HdfDailyBarReader(SessionBarReader):
             query = "date>=" + start_date.strftime("%Y%m%d") + \
                     " & date<=" + end_date.strftime("%Y%m%d") + \
                     " & exchange_symbol=" + "\"" + exchange_symbol + "\""
-            result = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
+            result = read_hdf(dirname+'\\_InstrumentData.h5',where=query)
             result_dates = DatetimeIndex(result.index.get_level_values(0), dtype='datetime64[ns, UTC]')
             result = result[~result.index.get_level_values(0).isin(result_dates.difference(self.sessions))]
             out.append(result.as_matrix(columns))
@@ -147,7 +143,7 @@ class HdfDailyBarReader(SessionBarReader):
 #        exchange_symbol = instrument.exchange_symbol
 #        print(exchange_symbol)
         query = "date=" + dt.strftime("%Y%m%d") + "& exchange_symbol=" + "\"" + exchange_symbol + "\""
-        results = read_hdf(dirname +'\..\database\_InstrumentData.h5',where=query)
+        results = read_hdf(dirname+'\\_InstrumentData.h5',where=query)
         if results.shape[0] == 0:
             raise NoDataOnDate("day={0} is outside of calendar={1}".format(
                 dt, self.trading_calendar.sessions_in_range(self._start_session, self._end_session)))

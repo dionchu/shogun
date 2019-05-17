@@ -17,7 +17,8 @@ from shogun.utils.query_utils import query_df
 from shogun.analytics.bondmath import billprice
 
 import os
-dirname = os.path.dirname(__file__)
+#dirname = os.path.dirname(__file__)
+from shogun.DIRNAME import dirname
 
 import logging
 
@@ -85,8 +86,8 @@ def update_tbill(factory,dt,platform='RIC'):
         'start_date': existing_instruments_dict['end_date'],
         }
 
-#    platform_query_df = pd.DataFrame.from_dict(platform_query)
-#    platform_query = platform_query_df[platform_query_df['start_date'] <= dt.date()].to_dict()
+    platform_query_df = pd.DataFrame.from_dict(platform_query)
+    platform_query = platform_query_df[platform_query_df['start_date'] <= dt.date()].to_dict()
 
     # Loop through symbols and pull raw data into data frame
     data_df = get_eikon_tbill_data(platform_query, dt, first_time)
@@ -227,8 +228,7 @@ def write_to_fixed_income_instrument(dirname, new_instrument_metadata=None, exis
             # update end dates in fixed_income instrument
             if existing_instruments_metadata is not None:
                 for symbol in existing_instruments_metadata.exchange_symbol:
-                    if start_end_df.to_dict()['end_date'][symbol] >= fixed_income_instrument_hdf.at[symbol, 'end_date']:
-                        fixed_income_instrument_hdf.at[symbol, 'end_date'] = start_end_df.to_dict()['end_date'][symbol]
+                    fixed_income_instrument_hdf.at[symbol, 'end_date'] = start_end_df.to_dict()['end_date'][symbol]
             # append new metadata to fixed_income instrument
             if new_instrument_metadata is not None:
                 new_instrument_metadata = _convert_instrument_timestamp_fields(new_instrument_metadata)
@@ -371,8 +371,6 @@ def get_eikon_tbill_data(platform_query, dt, first_time):
         tmp['LOW'] = tmp_lo
         data_df = data_df.append(tmp)
 
-    # rearrange columns
-    data_df = data_df[['exchange_symbol','OPEN','HIGH','LOW','CLOSE','VOLUME','open_interest']]
     # Change default column names to lower case
     data_df.columns = ['exchange_symbol','open','high','low','close','volume','open_interest']
     data_df.index.name = 'date'

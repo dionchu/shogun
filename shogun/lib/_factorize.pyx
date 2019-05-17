@@ -6,7 +6,7 @@ from libc.math cimport log
 cimport numpy as np
 import numpy as np
 
-from zipline.utils.numpy_utils import unsigned_int_dtype_with_size_in_bytes
+from shogun.utils.numpy_utils import unsigned_int_dtype_with_size_in_bytes
 
 np.import_array()
 

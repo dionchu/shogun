@@ -13,18 +13,18 @@ from numpy import (
     uint32,
     uint8,
 )
-from zipline.errors import (
+from shogun.errors import (
     WindowLengthNotPositive,
     WindowLengthTooLong,
 )
-from zipline.lib.labelarray import LabelArray
-from zipline.utils.numpy_utils import (
+from shogun.lib.labelarray import LabelArray
+from shogun.utils.numpy_utils import (
     datetime64ns_dtype,
     float64_dtype,
     int64_dtype,
     uint8_dtype,
 )
-from zipline.utils.memoize import lazyval
+from shogun.utils.memoize import lazyval
 
 # These class names are all the same because of our bootleg templating system.
 from ._float64window import AdjustedArrayWindow as Float64Window

@@ -11,7 +11,8 @@ from shogun.data_portal.hdf_daily_bars import HdfDailyBarReader
 #query = select([transactions]).where(and_(self._issuance.columns.Type == 'BILL',
 #                self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d')))
 
-dirname = 'D:\\Users\\orthogonal\\Documents\\Python Dev\\shogun\\shogun\\database'
+from shogun.DIRNAME import dirname
+
 platform_default = 'FID'
 
 _blotter_float_fields = frozenset({
@@ -43,7 +44,6 @@ def _convert_blotter_float_fields(df):
 class PerformanceAnalysis(object):
     """A Performance Analysis object tracks historical pnl and other
     portfolio metrics for performance analysis
-
     Parameters
     ----------
     start_date: str
@@ -52,7 +52,7 @@ class PerformanceAnalysis(object):
         the end date in yyyy-mm-dd format
     """
 
-    def __init__(self, start_date, end_date, trading_calendar, instrument_finder):
+    def __init__(self, start_date, end_date, trading_calendar, instrument_finder): # add , portfolio or something similar
         self.start_date = start_date
         self.end_date = end_date
         self.strategy_dict = OrderedDict()
@@ -62,7 +62,7 @@ class PerformanceAnalysis(object):
         self.trading_calendar = trading_calendar
         self.instrument_finder = instrument_finder
         self._bar_reader = HdfDailyBarReader(self.trading_calendar)
-        self._engine = create_engine('mysql+mysqlconnector://dev:N8WWQp+4@159.65.191.117/portfolio_ogf', echo=False)
+        self._engine = create_engine('mysql+mysqlconnector://orth_mfp:N8WWQp+4@159.65.191.117/portfolio_ogf', echo=False)
         self._connection = self._engine.connect()
         self._inspector = inspect(self._engine)
         self._metadata = MetaData(self._engine)
