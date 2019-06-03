@@ -198,6 +198,7 @@ class PerformanceAnalysis(object):
             sub = self._blotter.groupby('Strategy').get_group(strategy)
             strategy_tracker = self.strategy_dict[strategy]
             daily_pnl = self.pnl_dict[strategy]
+            daily_pnl = daily_pnl.drop(columns=['sum'])
             daily_pnl = daily_pnl.append(pd.DataFrame(np.nan, index=self.trading_sessions, columns=['realized','unrealized','commission','dividend']))
 
             for session in self.trading_sessions:
