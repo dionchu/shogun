@@ -52,13 +52,14 @@ class PerformanceAnalysis(object):
         the end date in yyyy-mm-dd format
     """
 
-    def __init__(self, start_date, end_date, trading_calendar, instrument_finder, strategy_dict=None, pnl_dict=None): # add , portfolio or something similar
+    def __init__(self, start_date, end_date, trading_calendar, instrument_finder, portfolio_source='portfolio_ogf', strategy_dict=None, pnl_dict=None): # add , portfolio or something similar
         self.start_date = start_date
         self.end_date = end_date
         self.trading_calendar = trading_calendar
         self.instrument_finder = instrument_finder
         self._bar_reader = HdfDailyBarReader(self.trading_calendar)
-        self._engine = create_engine('mysql+mysqlconnector://orth_mfp:N8WWQp+4@159.65.191.117/portfolio_ogf', echo=False)
+        self._engine = create_engine(f'mysql+mysqlconnector://orth_mfp:N8WWQp+4@159.65.191.117/{portfolio_source}', echo=False) # portfolio_source is either portfolio_ogf, portfolio_harbourton, or something else; default should be portfolio_ogf
+        # Maybe add error thing saying portfolio
         self._connection = self._engine.connect()
         self._inspector = inspect(self._engine)
         self._metadata = MetaData(self._engine)
@@ -71,7 +72,7 @@ class PerformanceAnalysis(object):
         if strategy_dict and pnl_dict:
             self.strategy_dict = strategy_dict
             self.pnl_dict = pnl_dict
-            start_timestamp = sum(pnl_dict.values()).index[-1]+1
+            start_timestamp = sum(pnl_dict.values()).index[-1]+1 # This has a future deprecation warning
             self.trading_sessions = pd.date_range(start_timestamp.strftime('%Y-%m-%d'), end_date, freq=pd.offsets.BDay())
         elif (strategy_dict is not None and pnl_dict is None) or (pnl_dict is not None and strategy_dict is None):
             print("Error: both strategy_dict and pnl_dict must be provided or none")
