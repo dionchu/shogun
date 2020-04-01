@@ -15,6 +15,7 @@ dirname = 'D:\\Users\\orthogonal\\Documents\\Python Dev\\shogun\\shogun\\databas
 platform_default = 'FID'
 
 _blotter_float_fields = frozenset({
+    'Trade_Volume',
     'Agreed_Price',
     'Target',
     'Slip',
@@ -172,6 +173,9 @@ class PerformanceAnalysis(object):
                     div_instrument = self.instrument_finder.retrieve_instrument(sub_div.index[i])
                     strategy_tracker.process_dividend(div_instrument, div_row)
 
+                # Coupon must be processed before transactions
+                strategy_tracker.process_coupon(session)
+
                 for i in range(len(sub_session)):
                     row = sub_session.iloc[i]
                     amt = row['Trade_Volume'] if row['Buy_Sell'] == 'B' else -row['Trade_Volume']
@@ -209,6 +213,9 @@ class PerformanceAnalysis(object):
                     div_instrument = self.instrument_finder.retrieve_instrument(sub_div.index[i])
                     strategy_tracker.process_dividend(div_instrument, div_row)
 
+                # Coupon must be processed before transactions
+                strategy_tracker.process_coupon(session)
+                
                 for i in range(len(sub_session)):
                     row = sub_session.iloc[i]
                     amt = row['Trade_Volume'] if row['Buy_Sell'] == 'B' else -row['Trade_Volume']

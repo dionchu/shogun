@@ -305,7 +305,11 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
         metadata_df = construct_future_metadata(missing_root_chain_df, missing_root_info_dict, start_end_df)
     else:
         metadata_df = None
-    write_to_future_instrument(dirname, metadata_df, existing_contracts, start_end_df)
+
+    # Filter out relevant existing symbols
+    relevant_contracts = list(data_df.index.get_level_values('exchange_symbol').unique())
+    existing_contracts_relevant = existing_contracts[existing_contracts['exchange_symbol'].isin(relevant_contracts)]
+    write_to_future_instrument(dirname, metadata_df, existing_contracts_relevant, start_end_df)
     # Write to instrument router
     write_to_instrument_router(dirname, metadata_df)
 
@@ -325,7 +329,8 @@ def get_eikon_futures_data(platform_query, dt):
         i = 0
         while (i < 3):
             try:
-                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(days=4)):
+#                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(days=4)):
+                if(today <= platform_query['last_trade'][platform_symbol]+pd.Timedelta(days=1)):
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol.split('^')[0],exchange_symbol,start_date=start,end_date=end)
                 else:
                     tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)

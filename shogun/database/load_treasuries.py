@@ -7,14 +7,14 @@ import time as time
 import eikon as ek
 ek.set_app_key('48f17fdf21184b0ca9c4ea8913a840a92b338918')
 ek.set_app_key('4ed8362c27f846d09376992fae22fd34dd1c8950')
-from .tbill_factory import TBillFactory
-from .tbill_factory import tbill_metadata_df, _instrument_timestamp_fields, metadata_columns
+from .treasury_factory import TreasuryFactory
+from .treasury_factory import treasury_metadata_df, _instrument_timestamp_fields, metadata_columns
 
 from pandas import read_hdf
 from pandas import HDFStore,DataFrame
 
 from shogun.utils.query_utils import query_df
-from shogun.analytics.bondmath import billprice
+from shogun.analytics.bondmath import bndprice
 
 import os
 dirname = os.path.dirname(__file__)
@@ -24,12 +24,26 @@ import logging
 from datetime import date
 from pandas.tseries.offsets import *
 
-def update_tbill(factory,dt,platform='RIC'):
+COLUMN_LIST = ['Exchange_ID', 'Buy_Sell', 'Instrument', 'Instrument_Description',
+               'Traded_Against', 'Trade_Volume', 'Agreed_Price', 'Agreed_Currency',
+               'Trade_ID', 'Entered_Timestamp', 'Traded_On','Trading_Entity_ID',
+               'Account', 'Order_ID', 'Entered_By', 'Client',
+               'Strategy', 'Target', 'Slip', 'Multiplier', 'Dollar_Slip',
+               'Call_Put', 'Option_Expiry_Fee', 'GiveIn_Fee',
+               'Assignment_Fee', 'NFA_Fee', 'Exchange_Fee',
+               'Clearing_Fee', 'IB_Transaction_Fee', 'IB_Sell_Fee',
+               'FINRA_Sell_Fee', 'ADM_Handling_Fee', 'Total_Fee',
+               'Trade_Date']
+
+ogf_path = 'D:\\Users\\orthogonal\\Dropbox\\Administrative Documents\\Orthogonal LLC\\Trading\\PortfolioView - OGF.xlsx'
+fills = pd.read_excel(ogf_path,'Fills')[COLUMN_LIST]
+
+def update_nominal(factory,dt,platform='RIC'):
     """
     update fixed income to table
     """
     dt = pd.Timestamp(dt)
-    logging.basicConfig(filename='./python_logs/update_tbill'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
+    logging.basicConfig(filename='./python_logs/update_treasuries'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
     logging.info('Started')
 
     exchange_id = 'USBOND'
@@ -42,15 +56,16 @@ def update_tbill(factory,dt,platform='RIC'):
     # compare todays list to existing FixedIncomeInstrument table
     if os.path.isfile(dirname + "\_FixedIncomeInstrument.h5"):
         first_time = False
-        bills_outstanding = factory.get_outstanding_bills(dt)
-        processed_instruments = read_hdf(dirname + '\_FixedIncomeInstrument.h5',where="type=" + "\"" + 'BILL' + "\"").reset_index(level=[0])
-        new_bills_outstanding = bills_outstanding[~bills_outstanding.exchange_symbol.isin(processed_instruments.exchange_symbol)]
-        new_instruments_metadata = factory.construct_tbill_metadata(new_bills_outstanding)
-        existing_instruments_metadata = processed_instruments[processed_instruments.exchange_symbol.isin(bills_outstanding.exchange_symbol)]
+        nominals_outstanding = factory.get_outstanding_nominals(dt)
+        processed_instruments = read_hdf(dirname + '\_FixedIncomeInstrument.h5',where="type=" + "'NOTE' | type=" + "\"" + 'BOND' + "\"").reset_index(level=[0])
+        new_nominals_outstanding = nominals_outstanding[nominals_outstanding.exchange_symbol.isin(set(fills['Instrument'])) &
+                                                        ~nominals_outstanding.exchange_symbol.isin(processed_instruments.exchange_symbol)]
+        new_instruments_metadata = factory.construct_nominals_metadata(new_nominals_outstanding)
+        existing_instruments_metadata = processed_instruments[processed_instruments.exchange_symbol.isin(nominals_outstanding.exchange_symbol)]
     else:
         first_time = True
-        new_bills_outstanding = factory.get_outstanding_bills(dt, first_time)
-        new_instruments_metadata = factory.construct_tbill_metadata(new_bills_outstanding)
+        new_nominals_outstanding = factory.get_outstanding_nominals(dt, first_time)
+        new_instruments_metadata = factory.construct_nominals_metadata(new_nominals_outstanding)
         existing_instruments_metadata = None
 
     if existing_instruments_metadata is not None:
@@ -59,7 +74,7 @@ def update_tbill(factory,dt,platform='RIC'):
         existing_instruments_dict = existing_instruments_metadata.set_index('platform_symbol').to_dict()
     else:
         # set to empty default dataframe
-        existing_instruments_metadata = tbill_metadata_df
+        existing_instruments_metadata = treasury_metadata_df
         existing_instruments_metadata.insert(0,'platform_symbol', [factory.exchange_symbol_to_ticker(x) for x in existing_instruments_metadata.index])
         existing_instruments_dict = existing_instruments_metadata.set_index('platform_symbol').to_dict()
 
@@ -72,6 +87,7 @@ def update_tbill(factory,dt,platform='RIC'):
 
         # combine information in dictionary
         platform_query = {
+        'coupon': dict(existing_instruments_dict['coupon'], **new_instruments_dict['coupon']),
         'issue_date': dict(existing_instruments_dict['issue_date'], **new_instruments_dict['issue_date']),
         'maturity_date': dict(existing_instruments_dict['maturity_date'], **new_instruments_dict['maturity_date']),
         'exchange_symbol': dict(existing_instruments_dict['exchange_symbol'], **new_instruments_dict['exchange_symbol']),
@@ -79,6 +95,7 @@ def update_tbill(factory,dt,platform='RIC'):
         }
     else:
         platform_query = {
+        'coupon': existing_instruments_dict['coupon'],
         'issue_date': existing_instruments_dict['issue_date'],
         'maturity_date': existing_instruments_dict['maturity_date'],
         'exchange_symbol': existing_instruments_dict['exchange_symbol'],
@@ -89,7 +106,7 @@ def update_tbill(factory,dt,platform='RIC'):
 #    platform_query = platform_query_df[platform_query_df['start_date'] <= dt.date()].to_dict()
 
     # Loop through symbols and pull raw data into data frame
-    data_df = get_eikon_tbill_data(platform_query, dt, first_time)
+    data_df = get_eikon_nominal_data(platform_query, dt, first_time)
     # Check missing symbols from platform_query
     check_missing_symbols(data_df, existing_instruments_metadata, new_instruments_metadata)
     # Check missing days and days not expected
@@ -103,7 +120,7 @@ def update_tbill(factory,dt,platform='RIC'):
         existing_instruments_metadata = None
 
     if new_instruments_metadata.shape[0] != 0:
-        new_instruments_metadata = construct_tbill_metadata(new_instruments_metadata, start_end_df)
+        new_instruments_metadata = construct_nominals_metadata(new_instruments_metadata, start_end_df)
     else:
         new_instruments_metadata = None
 
@@ -113,12 +130,12 @@ def update_tbill(factory,dt,platform='RIC'):
 
     logging.info('Finished')
 
-def update_missing_tbill(factory,dt,platform='RIC'):
+def update_missing_nominals(factory,dt,platform='RIC'):
     """
     update fixed income to table
     """
     dt = pd.Timestamp(dt)
-    logging.basicConfig(filename='./python_logs/update_missing_tbill'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
+    logging.basicConfig(filename='./python_logs/update_missing_nominals'+pd.Timestamp('today').strftime("%Y%m%d.%H.%M")+'.log',level=logging.DEBUG)
     logging.info('Started')
 
     exchange_id = 'USBOND'
@@ -131,12 +148,12 @@ def update_missing_tbill(factory,dt,platform='RIC'):
     # compare todays list to existing FixedIncomeInstrument table
     if os.path.isfile(dirname + "\_FixedIncomeInstrument.h5"):
         first_time = True
-        bills_outstanding = factory.get_outstanding_bills(dt, first_time)
-        processed_instruments = read_hdf(dirname + '\_FixedIncomeInstrument.h5',where="type=" + "\"" + 'BILL' + "\"").reset_index(level=[0])
-        missing_bills_outstanding = bills_outstanding[~bills_outstanding.exchange_symbol.isin(processed_instruments.exchange_symbol)]
-        missing_instruments_metadata = factory.construct_tbill_metadata(missing_bills_outstanding)
+        nominals_outstanding = factory.get_outstanding_nominals(dt, first_time)
+        processed_instruments = read_hdf(dirname + '\_FixedIncomeInstrument.h5',where="type=" + "'NOTE' | type=" + "\"" + 'BOND' + "\"").reset_index(level=[0])
+        missing_nominals_outstanding = nominals_outstanding[~nominals_outstanding.exchange_symbol.isin(processed_instruments.exchange_symbol)]
+        missing_instruments_metadata = factory.construct_nominals_metadata(missing_nominals_outstanding)
         # set to empty default dataframe, we only want update missing symbols here
-        existing_instruments_metadata = tbill_metadata_df
+        existing_instruments_metadata = treausury_metadata_df
         existing_instruments_metadata.insert(0,'platform_symbol', [factory.exchange_symbol_to_ticker(x) for x in existing_instruments_metadata.exchange_symbol])
 
     else:
@@ -152,17 +169,18 @@ def update_missing_tbill(factory,dt,platform='RIC'):
 
         # combine information in dictionary
         platform_query = {
+        'coupon': dict(existing_instruments_dict['coupon']),
         'issue_date': dict(missing_instruments_dict['issue_date']),
         'maturity_date': dict(missing_instruments_dict['maturity_date']),
         'exchange_symbol': dict(missing_instruments_dict['exchange_symbol']),
         'start_date': dict(missing_instruments_dict['first_auction_date'])
         }
     else:
-        print('no missing bills')
+        print('no missing nominals')
         return
 
     # Loop through symbols and pull raw data into data frame
-    data_df = get_eikon_tbill_data(platform_query, dt, first_time)
+    data_df = get_eikon_nominal_data(platform_query, dt, first_time)
     # Check missing symbols from platform_query
     check_missing_symbols(data_df, existing_instruments_metadata, missing_instruments_metadata)
     # Check missing days and days not expected
@@ -186,7 +204,7 @@ def update_missing_tbill(factory,dt,platform='RIC'):
 
     logging.info('Finished')
 
-def construct_tbill_metadata(new_instruments_metadata, start_end_df):
+def construct_nominals_metadata(new_instruments_metadata, start_end_df):
     if start_end_df.shape[0] != 0:
         start_end_df.reset_index(level=[0],inplace=True)
         metadata_df = pd.merge(new_instruments_metadata,start_end_df, on='exchange_symbol')
@@ -333,7 +351,7 @@ def check_missing_symbols(data_df,existing_instruments,missing_instruments):
 
 
 
-def get_eikon_tbill_data(platform_query, dt, first_time):
+def get_eikon_nominal_data(platform_query, dt, first_time):
     # Loop through symbols and pull raw data into data frame
     today = pd.Timestamp(date.today())
     data_df = pd.DataFrame()
@@ -343,6 +361,7 @@ def get_eikon_tbill_data(platform_query, dt, first_time):
         maturity_date = platform_query['maturity_date'][platform_symbol].strftime("%Y-%m-%d")
         issue_date = platform_query['issue_date'][platform_symbol].strftime("%Y-%m-%d")
         exchange_symbol = platform_query['exchange_symbol'][platform_symbol]
+        coupon = float(platform_query['coupon'][platform_symbol])
         if first_time:
             start = platform_query['start_date'][platform_symbol].strftime("%Y-%m-%d")
             end = platform_query['maturity_date'][platform_symbol].strftime("%Y-%m-%d")
@@ -366,10 +385,10 @@ def get_eikon_tbill_data(platform_query, dt, first_time):
 #                i = i + 1
 #                print("trying again")
         tmp = eikon_ohlcvoi_batch_retrieval(platform_symbol,exchange_symbol,start_date=start,end_date=end)
-        tmp['OPEN'] = [billprice(row['OPEN']/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
-        tmp['CLOSE'] = [billprice(row['CLOSE']/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
-        tmp_hi = [billprice(row['LOW']/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
-        tmp_lo = [billprice(row['HIGH']/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
+        tmp['OPEN'] = [bndprice(row['OPEN']/100, coupon/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
+        tmp['CLOSE'] = [bndprice(row['CLOSE']/100, coupon/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
+        tmp_hi = [bndprice(row['LOW']/100, coupon/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
+        tmp_lo = [bndprice(row['HIGH']/100, coupon/100, index.strftime("%Y-%m-%d"), maturity_date, issue_date) for index, row in tmp.iterrows()]
         tmp['HIGH'] = tmp_hi
         tmp['LOW'] = tmp_lo
         data_df = data_df.append(tmp)

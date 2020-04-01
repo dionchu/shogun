@@ -247,6 +247,19 @@ class Strategy(object):
 
             self._processed_dividends[dividend.ex_date] = div_owed
 
+    def process_coupon(self, session):
+        dt = session.strftime('%Y-%m-%d')
+
+        fi_positions = [pos for pos in current_positions if pos['instrument'].__class.__name__ == 'FixedIncome' and pos['instrument'].coupon !=0]
+        if len(fi_positions) > 0:
+            for fi_position in fi_positions:
+                if fi_position.get_coupon(session) == False:
+                    pass
+                else:
+                    div_owed = self.positions[instrument].earn_dividend(
+                        fi_position.get_coupon(session)/100
+                    )
+                    self._processed_dividends[dt] = div_owed
 
     def refresh(self,session, bar_reader):
         self.realized_pnl = 0

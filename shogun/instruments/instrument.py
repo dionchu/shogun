@@ -1,6 +1,8 @@
 from trading_calendars import get_calendar
 import math
 import numpy as np
+import QuantLib as ql
+from shogun.analytics.bondmath import make_ql_bond
 from string import ascii_lowercase
 LETTERS = {letter: str(index) for index, letter in enumerate(ascii_lowercase, start=1)}
 LETTERS['_'] = '0'
@@ -431,6 +433,9 @@ class FixedIncome(Instrument):
         self.maturity_date = maturity_date
         self.period = period
         self.redemption = redemption
+        self.ql_bond_object = make_ql_bond(float(self.coupon)/100,
+                                                self.maturity_date.strftime("%Y-%m-%d"),
+                                                self.issue_date.strftime("%Y-%m-%d"))
     """
     period:
         Daily
@@ -451,6 +456,20 @@ class FixedIncome(Instrument):
         Act/360
         Thirty360
     """
+    def get_coupon(self, session):
+        """
+        Get coupon payment on session, if any.
+        """
+        session = ql.DateParser.parseFormatted(session,'%Y-%m-%d')
+        coupon = [cflow for cflow in self.ql_bond_object.cashflows() if cflow.date() == session]
+        if len(coupon) > 0:
+            if coupon[0] == 0:
+                return(False)
+            else:
+                return(round(coupon[0].amount(),5))
+        else:
+            return(False)
+
     def to_esid(self):
         """
         Convert exchange symbol to a number.

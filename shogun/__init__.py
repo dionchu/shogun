@@ -32,6 +32,7 @@ from .data_portal.history_loader import ContinuousFutureAdjustmentReader
 from .data_portal.continuous_future_reader import ContinuousFutureSessionBarReader
 from .database.future_root_factory import FutureRootFactory
 from .database.tbill_factory import TBillFactory
+from .database.treasury_factory import TreasuryFactory
 from .database.equity_factory import EquityFactory
 from .finance.performance_analysis import PerformanceAnalysis
 from .instruments.roll_finder import (
@@ -48,6 +49,7 @@ __all__ = [
     'ContinuousFutureSessionBarReader',
     'FutureRootFactory',
     'TBillFactory',
+    'TreasuryFactory',
     'EquityFactory',
     'CalendarRollFinder',
     'VolumeRollFinder',

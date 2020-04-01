@@ -18,7 +18,7 @@ from pandas.tseries.holiday import (
     SU,
 )
 
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine, and_, or_
 import mysql.connector
 from sqlalchemy import Table, MetaData, select
 
@@ -51,9 +51,10 @@ def _convert_metadata_timestamp_fields(df):
     """
     Takes in a df of Instrument metadata columns and converts dates to pd.datetime64
     """
+    dfcopy = df.copy()
     for key in _metadata_timestamp_fields:
-        df[key] = pd.to_datetime(df[key])
-    return df
+        dfcopy[key] = pd.to_datetime(df[key])
+    return dfcopy
 
 metadata_columns = ['exchange_symbol', 'instrument_name', 'instrument_country_id',
                  'underlying_name', 'underlying_asset_class_id', 'type',
@@ -73,11 +74,11 @@ columns = ['exchange_symbol', 'instrument_name', 'instrument_country_id',
                  'multiplier', 'tick_size', 'exchange_info', 'parent_calendar_id',
                  'child_calendar_id']
 
-tbill_instrument_df = pd.DataFrame(columns = columns)
-tbill_metadata_df = pd.DataFrame(columns = metadata_columns)
+treasury_instrument_df = pd.DataFrame(columns = columns)
+treasury_metadata_df = pd.DataFrame(columns = metadata_columns)
 
-class TBillFactory(object):
-    """A Treasury Bill factory is an object that creates specific TBill
+class TreasuryFactory(object):
+    """A Treasury Bill factory is an object that creates specific US Treasury
     instrument instances for writing into the FixedIncome table.
 
     Parameters
@@ -104,7 +105,7 @@ class TBillFactory(object):
         self._tbill_cache = {}
         self._tbill_days = {}
 
-    def get_outstanding_bills(self, date, first_time = False):
+    def get_outstanding_nominals(self, date, first_time = False):
         # ensure that date is a pd.Timestamp class
         if not isinstance(date,pd.Timestamp):
             date = pd.Timestamp(date)
@@ -112,12 +113,16 @@ class TBillFactory(object):
         connection = self._engine.connect()
 
         if first_time:
-            query = select([self._issuance]).where(and_(self._issuance.columns.Type == 'BILL',
-                            self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d')))
-        else:
-            query = select([self._issuance]).where(and_(self._issuance.columns.Type == 'BILL',
+            query = select([self._issuance]).where(and_(or_(self._issuance.columns.Type == 'NOTE',
+                            self._issuance.columns.Type == 'BOND'),
                             self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d'),
-                            self._issuance.columns.AuctionDate < date.strftime('%Y-%m-%d')))
+                            self._issuance.columns.SecType == 'T'))
+        else:
+            query = select([self._issuance]).where(and_(or_(self._issuance.columns.Type == 'NOTE',
+                            self._issuance.columns.Type == 'BOND'),
+                            self._issuance.columns.MaturityDate > date.strftime('%Y-%m-%d'),
+                            self._issuance.columns.AuctionDate < date.strftime('%Y-%m-%d'),
+                            self._issuance.columns.SecType == 'T'))
 
         ResultProxy = connection.execute(query)
         ResultSet = ResultProxy.fetchall()
@@ -141,7 +146,7 @@ class TBillFactory(object):
 
         return df
 
-    def construct_tbill_metadata(self, df):
+    def construct_nominals_metadata(self, df):
 
         # Ensure only the first auction is retrieved
         df = df.loc[~df.exchange_symbol.duplicated(keep='first')]
@@ -152,11 +157,11 @@ class TBillFactory(object):
         df['underlying_asset_class_id'] = 2
         df['settlement_days'] = 1
         df['face_value'] = 100
-        df['day_counter'] = 'Act/360'
+        df['day_counter'] = 'Act/Act'
         df['effective_date'] = df['dated_date']
         df['first_auction_date'] = df['auction_date']
         df[df.effective_date != df.effective_date]['effective_date'] == df[df.effective_date != df.effective_date]['issue_date']
-        df['period'] = 'NoFrequency'
+        df['period'] = 'Semiannual'
         df['redemption'] = 100
         df['settle_start'] = '15:00'
         df['settle_end'] = '15:00'

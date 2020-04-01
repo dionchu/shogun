@@ -141,7 +141,9 @@ def write_to_equity_event(dirname, dividend = None, split = None):
         if os.path.isfile(dirname + "\_EquityDividend.h5"):
             equity_dividend_hdf = read_hdf(dirname +'\_EquityDividend.h5')
             equity_dividend_hdf = equity_dividend_hdf.append(dividend)
+            equity_dividend_hdf.set_index(['ex_date'],append=True,inplace=True)
             equity_dividend_hdf = equity_dividend_hdf[~equity_dividend_hdf.index.duplicated(keep='last')]
+            equity_dividend_hdf = equity_dividend_hdf.reset_index(level=[1])
             equity_dividend_hdf.sort_index(level=['exchange_symbol'], ascending=[1], inplace=True)
             equity_dividend_hdf.to_hdf(dirname +'\_EquityDividend.h5', 'EquityDividend', mode = 'w',
                format='table', data_columns=True)
@@ -155,6 +157,8 @@ def write_to_equity_event(dirname, dividend = None, split = None):
             equity_dividend_hdf.to_csv(dirname + "\_EquityDividend.csv")
 
 def write_to_equity_instrument(dirname, new_instrument_metadata=None, existing_instruments_metadata=None, start_end_df=None):
+    if 'exchange_symbol' in start_end_df:
+        start_end_df.set_index('exchange_symbol',inplace=True)
     # Append data to hdf, remove duplicates, and write to both hdf and csv
     if new_instrument_metadata is None and existing_instruments_metadata is None:
         return
@@ -262,7 +266,6 @@ def check_missing_symbols(data_df,existing_instruments,missing_instruments):
 
 def get_eikon_dividend_data(platform_query, dt, start_override = None):
     # Loop through symbols and pull raw data into data frame
-    today = pd.Timestamp(date.today())
     data_df = pd.DataFrame()
     dt = pd.Timestamp(dt.strftime("%Y-%m-%d"))
     for platform_symbol in platform_query['exchange_symbol'].keys():
@@ -274,12 +277,12 @@ def get_eikon_dividend_data(platform_query, dt, start_override = None):
             start = start_override
         end = dt.strftime("%Y-%m-%d")
         if platform_query['type'][platform_symbol] == 'ETF':
-            tmp, err = ek.get_data(platform_symbol, ["TR.FundExDate", "TR.FundRecordDate", "TR.FundPayDate", "TR.FundDiv", "TR.FundDivCurr"], {'SDate':str(start),'EDate':str(end)})
+            tmp, err = ek.get_data(platform_symbol, ["TR.FundExDate", "TR.FundRecordDate", "TR.FundPayDate", "TR.FundDiv", "TR.FundDivCurr"], {'SDate':str(start),'EDate':str(end), 'DateType': 'ED'})
         else:
-            tmp, err = ek.get_data(platform_symbol, ["TR.DivExDate", "TR.DivRecordDate", "TR.DivPayDate", "TR.DivUnadjustedGross", "TR.DivCurr"], {'SDate':str(start),'EDate':str(end)})
+            tmp, err = ek.get_data(platform_symbol, ["TR.DivExDate", "TR.DivRecordDate", "TR.DivPayDate", "TR.DivUnadjustedGross", "TR.DivCurr"], {'SDate':str(start),'EDate':str(end), 'DateType': 'ED'})
         tmp.columns = ['exchange_symbol', 'ex_date', 'record_date', 'pay_date', 'dividend', 'currency']
         tmp['exchange_symbol'] = exchange_symbol
-        if len(tmp) > 1 and not math.isnan(tmp.iloc[0]['dividend']):
+        if len(tmp) >= 1 and not math.isnan(tmp.iloc[0]['dividend']):
             data_df = data_df.append(tmp)
 
     # Change default column names to lower case
