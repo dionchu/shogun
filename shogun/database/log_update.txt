@@ -1,0 +1,1050 @@
+
+D:\Users\orthogonal\Documents\Python Dev>set root=D:\Users\orthogonal\AppData\Local\Continuum\anaconda3 
+
+D:\Users\orthogonal\Documents\Python Dev>call D:\Users\orthogonal\AppData\Local\Continuum\anaconda3\Scripts\activate.bat D:\Users\orthogonal\AppData\Local\Continuum\anaconda3 
+
+(base) D:\Users\orthogonal\Documents\Python Dev>call activate algo 
+
+D:\Users\orthogonal\Documents\Python Dev>python D:\Users\orthogonal\AppData\Local\Continuum\anaconda3\envs\algo\etc\keras\load_config.py  1>temp.txt 
+
+D:\Users\orthogonal\Documents\Python Dev>set /p KERAS_BACKEND= 0<temp.txt 
+
+D:\Users\orthogonal\Documents\Python Dev>del temp.txt 
+
+D:\Users\orthogonal\Documents\Python Dev>python -c "import keras"  1>nul 2>&1 
+
+D:\Users\orthogonal\Documents\Python Dev>if errorlevel 1 (
+ver  1>nul  
+ set "KERAS_BACKEND=theano"  
+ python -c "import keras"  1>nul 2>&1 
+) 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>for /F "skip=1" %x in ('wmic os get localdatetime') do if not defined MyDate set MyDate=%x 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>if not defined MyDate set MyDate=20200915174101.599000-240 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>if not defined MyDate set MyDate= 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>for /F %x in ('wmic path win32_localtime get /format:list | findstr "="') do set %x 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Day=15 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set DayOfWeek=2 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Hour=17 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Milliseconds= 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Minute=41 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Month=9 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Quarter=3 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Second=1 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set WeekInMonth=3 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set Year=2020 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set fmonth=009 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set fday=0015 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>set today=2020-09-15 
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python eu_equities_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+FDXZ0^2
+trying again
+trying again
+trying again
+FDXU0^2
+trying again
+trying again
+trying again
+FDXH1^2
+trying again
+trying again
+trying again
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python eu_rates_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+FBTSH1^2
+trying again
+trying again
+trying again
+FBTSZ0^2
+trying again
+trying again
+trying again
+FBTSM1^2
+trying again
+trying again
+trying again
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python uk_rates_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+UH1^2
+trying again
+trying again
+trying again
+UZ0^2
+trying again
+trying again
+trying again
+UU0^2
+trying again
+trying again
+trying again
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_rates_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+TUU0^2
+TUH1^2
+trying again
+trying again
+TUZ0^2
+trying again
+trying again
+trying again
+contract listing not found: constructing list
+contract rules not found: constructing rules
+FVZ0^2
+trying again
+trying again
+trying again
+FVU0^2
+trying again
+trying again
+trying again
+FVH1^2
+trying again
+trying again
+trying again
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_equities_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+ESH1^2
+trying again
+trying again
+trying again
+ESM1^2
+trying again
+trying again
+trying again
+ESU0^2
+trying again
+trying again
+ESU1^2
+trying again
+trying again
+trying again
+ESZ0^2
+trying again
+trying again
+trying again
+contract listing not found: constructing list
+contract rules not found: constructing rules
+MEDU1^2
+trying again
+trying again
+trying again
+MEDU0^2
+trying again
+trying again
+trying again
+MEDM1^2
+trying again
+trying again
+trying again
+MEDZ0^2
+trying again
+trying again
+trying again
+MEDH1^2
+trying again
+trying again
+trying again
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_energy_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+CLH26^2
+trying again
+trying again
+trying again
+CLJ27^2
+trying again
+trying again
+trying again
+CLX27^2
+trying again
+trying again
+trying again
+CLX24^2
+trying again
+CLQ27^2
+trying again
+trying again
+trying again
+CLV24^2
+trying again
+trying again
+trying again
+CLZ3^2
+trying again
+trying again
+trying again
+CLN2^2
+trying again
+trying again
+trying again
+CLF3^2
+trying again
+trying again
+CLN27^2
+trying again
+trying again
+trying again
+CLM2^2
+trying again
+trying again
+CLF24^2
+trying again
+trying again
+CLM3^2
+trying again
+trying again
+trying again
+CLV3^2
+trying again
+trying again
+trying again
+CLZ2^2
+trying again
+trying again
+trying again
+CLN1^2
+trying again
+trying again
+trying again
+CLK25^2
+trying again
+trying again
+trying again
+CLH2^2
+trying again
+trying again
+trying again
+CLH27^2
+trying again
+trying again
+trying again
+CLV27^2
+trying again
+trying again
+trying again
+CLQ24^2
+trying again
+trying again
+trying again
+CLU2^2
+trying again
+trying again
+trying again
+CLM26^2
+trying again
+CLQ26^2
+trying again
+trying again
+trying again
+CLM27^2
+trying again
+trying again
+trying again
+CLG24^2
+trying again
+trying again
+trying again
+CLZ26^2
+trying again
+CLZ25^2
+CLG26^2
+CLU25^2
+CLX2^2
+CLK24^2
+CLJ1^2
+CLZ0^2
+CLU1^2
+CLF1^2
+CLN24^2
+CLU27^2
+CLX0^2
+CLV0^2
+CLZ24^2
+CLH25^2
+CLN3^2
+CLF28^2
+CLM25^2
+CLF25^2
+CLX3^2
+CLX25^2
+CLZ1^2
+CLJ2^2
+CLK26^2
+CLU26^2
+CLU24^2
+CLN26^2
+CLK3^2
+CLK1^2
+CLF2^2
+CLQ25^2
+CLF27^2
+CLQ3^2
+CLF26^2
+trying again
+CLM1^2
+CLV2^2
+CLG27^2
+trying again
+CLG1^2
+CLJ26^2
+CLH3^2
+CLG3^2
+CLG25^2
+CLU3^2
+CLQ2^2
+trying again
+CLG28^2
+CLK27^2
+CLX1^2
+CLJ3^2
+CLZ27^2
+CLJ25^2
+CLV1^2
+CLX26^2
+CLK2^2
+CLJ24^2
+CLG2^2
+CLV25^2
+trying again
+CLM24^2
+CLV26^2
+CLQ1^2
+CLH1^2
+CLH24^2
+CLN25^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+QMG1^2
+QMF3^2
+QMJ2^2
+QMV1^2
+QMU3^2
+QMG24^2
+QMN24^2
+QMZ3^2
+QMX1^2
+QMJ24^2
+QMU1^2
+QMZ2^2
+QMJ1^2
+QMV24^2
+QMQ2^2
+QMJ25^2
+QMV0^2
+QMG25^2
+QMZ1^2
+QMV3^2
+QMM24^2
+QMF25^2
+QMK3^2
+QMX2^2
+QMX24^2
+QMZ24^2
+QMU2^2
+QMZ25^2
+QMM1^2
+QMH1^2
+QMH25^2
+QMQ25^2
+QMG2^2
+QMM3^2
+QMH2^2
+QMX25^2
+QMV2^2
+QMK25^2
+QMQ3^2
+QMM25^2
+QMG3^2
+QMK2^2
+QMN25^2
+QMN1^2
+QMH24^2
+QMF2^2
+QMF1^2
+QMN3^2
+QMQ24^2
+QMF24^2
+QMK24^2
+QMN2^2
+QMU24^2
+QMX3^2
+QMZ0^2
+QMU25^2
+QMQ1^2
+QMX0^2
+QMM2^2
+QMJ3^2
+QMV25^2
+QMH3^2
+QMK1^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+NGU31^3
+NGU32^3
+NGZ32^3
+NGX23^2
+NGH21^2
+NGN28^2
+NGQ31^3
+NGX29^2
+NGN26^2
+NGM25^2
+NGZ31^3
+NGH28^2
+NGG28^2
+NGJ22^2
+NGU22^2
+NGF32^3
+NGN25^2
+NGU24^2
+NGG23^2
+NGZ23^2
+NGQ24^2
+NGV25^2
+NGK25^2
+NGQ26^2
+NGQ30^3
+NGJ28^2
+NGU23^2
+NGJ32^3
+NGQ28^2
+NGX26^2
+NGX20^2
+NGV21^2
+NGN22^2
+NGN27^2
+NGF30^3
+NGM28^2
+NGK24^2
+NGH23^2
+NGX24^2
+NGH29^2
+NGK29^2
+NGG30^3
+NGV32^3
+NGU28^2
+NGG26^2
+NGV30^3
+NGX25^2
+NGF27^2
+NGU30^3
+NGJ31^3
+NGN32^3
+NGG29^2
+NGN24^2
+NGN23^2
+NGM30^3
+NGM31^3
+NGK26^2
+NGZ25^2
+NGJ21^2
+NGJ24^2
+NGV23^2
+NGX27^2
+NGJ29^2
+NGX32^3
+NGN21^2
+NGX21^2
+NGK32^3
+NGQ25^2
+NGF25^2
+NGM21^2
+NGJ26^2
+NGV29^2
+NGZ20^2
+NGV22^2
+trying again
+NGH32^3
+NGH26^2
+trying again
+NGX28^2
+NGV28^2
+NGN31^3
+NGZ21^2
+trying again
+NGU29^2
+NGM27^2
+NGZ29^2
+NGJ23^2
+trying again
+NGG24^2
+NGV31^3
+NGZ22^2
+NGJ30^3
+NGV24^2
+NGH22^2
+NGF26^2
+NGM26^2
+NGK21^2
+NGQ23^2
+NGH24^2
+NGZ24^2
+NGN29^2
+NGH30^3
+NGM32^3
+NGM29^2
+NGF29^2
+NGF28^2
+NGZ26^2
+NGQ32^3
+NGX30^3
+NGH31^3
+NGK30^3
+NGK31^3
+NGX31^3
+NGV27^2
+NGF22^2
+NGU26^2
+NGK23^2
+NGU25^2
+NGF31^3
+NGK28^2
+NGV26^2
+NGQ22^2
+NGZ27^2
+NGQ21^2
+NGU27^2
+NGK22^2
+NGH27^2
+NGK27^2
+NGG31^3
+NGH25^2
+NGG25^2
+NGJ27^2
+NGG22^2
+NGZ30^3
+NGG21^2
+NGG32^3
+NGN30^3
+NGF21^2
+NGU21^2
+NGV20^2
+NGG27^2
+NGM24^2
+NGF23^2
+NGQ29^2
+trying again
+NGM22^2
+NGX22^2
+NGM23^2
+NGF24^2
+NGQ27^2
+NGZ28^2
+trying again
+NGJ25^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+HOK2^2
+HOM1^2
+HOV3^2
+HOX1^2
+HOX3^2
+HOZ0^2
+HON3^2
+HOH3^2
+HOG3^2
+HOX2^2
+HOV0^2
+trying again
+HOF3^2
+HOH1^2
+HOK3^2
+HON1^2
+HOV2^2
+HOZ3^2
+HOJ2^2
+HON2^2
+HOG1^2
+HOM2^2
+HOH2^2
+HOZ1^2
+HOX0^2
+HOZ2^2
+HOU3^2
+HOF1^2
+HOV1^2
+HOJ3^2
+HOM3^2
+HOF2^2
+HOQ1^2
+HOU1^2
+HOF24^2
+HOK1^2
+HOU2^2
+HOG2^2
+HOQ3^2
+HOJ1^2
+HOQ2^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+RBZ3^2
+RBF1^2
+RBF3^2
+RBG1^2
+RBN1^2
+RBV2^2
+RBK3^2
+RBX2^2
+RBQ2^2
+RBZ1^2
+RBU3^2
+RBN2^2
+RBH2^2
+RBJ1^2
+RBF24^2
+RBU1^2
+RBZ2^2
+RBV3^2
+RBK2^2
+RBH3^2
+RBG3^2
+RBX1^2
+RBM2^2
+RBX0^2
+RBF2^2
+RBV1^2
+RBX3^2
+RBJ2^2
+RBK1^2
+RBZ0^2
+RBV0^2
+RBM1^2
+RBG2^2
+RBQ1^2
+RBQ3^2
+RBU2^2
+RBM3^2
+RBJ3^2
+RBH1^2
+RBN3^2
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_metals_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+GCM1^2
+trying again
+GCM24^2
+GCM26^2
+GCJ1^2
+GCZ2^2
+GCM3^2
+GCV1^2
+GCZ0^2
+GCV0^2
+GCQ1^2
+GCZ25^2
+GCZ1^2
+GCG2^2
+GCZ24^2
+GCM2^2
+GCJ2^2
+GCU0^2
+GCG1^2
+GCZ3^2
+GCM25^2
+trying again
+contract listing not found: constructing list
+contract rules not found: constructing rules
+1HGF2^2
+1HGK3^2
+1HGH25^2
+1HGV1^2
+1HGZ3^2
+1HGK24^2
+1HGU2^2
+1HGJ1^2
+1HGH24^2
+1HGN25^2
+1HGX1^2
+1HGM1^2
+1HGU0^2
+1HGN2^2
+1HGK25^2
+1HGZ1^2
+1HGH1^2
+1HGK2^2
+1HGK1^2
+1HGU3^2
+1HGG1^2
+trying again
+1HGV0^2
+1HGN3^2
+1HGJ2^2
+1HGQ1^2
+1HGN24^2
+1HGN1^2
+1HGF1^2
+1HGU1^2
+1HGX0^2
+1HGU24^2
+1HGG2^2
+1HGZ24^2
+1HGH2^2
+1HGH3^2
+1HGM2^2
+1HGZ2^2
+1HGZ0^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+SIU0^2
+SIN24^2
+SIZ3^2
+SIZ1^2
+SIN25^2
+SIZ0^2
+SIH1^2
+SIZ2^2
+SIK2^2
+SIF1^2
+SIN1^2
+SIV0^2
+SIK1^2
+SIF2^2
+SIN2^2
+SIU1^2
+SIN3^2
+SIH2^2
+SIZ24^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+contract rules cached: reading from cache
+1QOG2^2
+1QOQ2^2
+1QOV0^2
+1QOQ1^2
+1QOJ2^2
+1QOZ1^2
+1QOM2^2
+1QOV1^2
+1QOJ1^2
+1QOM1^2
+1QOG1^2
+1QOZ0^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+1MGCG1^2
+1MGCV0^2
+1MGCZ0^2
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_currencies_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+contract rules cached: reading from cache
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_treasuries_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+9127964N6=TWEB
+9127964D8=TWEB
+9127963L1=TWEB
+9127964C0=TWEB
+9127964J5=TWEB
+9127963H0=TWEB
+9127962H1=TWEB
+9127962Y4=TWEB
+9127962T5=TWEB
+9127962G3=TWEB
+912796B65=TWEB
+9127963U1=TWEB
+9127964A4=TWEB
+912796TU3=TWEB
+9127962R9=TWEB
+912796A82=TWEB
+9127963K3=TWEB
+9127964Q9=TWEB
+9127963V9=TWEB
+9127964L0=TWEB
+9127965D7=TWEB
+9127962F5=TWEB
+9127963S6=TWEB
+912796A74=TWEB
+9127962J7=TWEB
+9127963T4=TWEB
+9127962Q1=TWEB
+9127962S7=TWEB
+9127964R7=TWEB
+9127963Z0=TWEB
+9127965B1=TWEB
+9127964G1=TWEB
+9127963A5=TWEB
+9127962Z1=TWEB
+912796UC1=TWEB
+912796TN9=TWEB
+9127964M8=TWEB
+912796B81=TWEB
+912796TP4=TWEB
+9127964H9=TWEB
+9127963B3=TWEB
+9127963J6=TWEB
+9127963W7=TWEB
+9127964F3=TWEB
+9127964K2=TWEB
+912796A58=TWEB
+9127964B2=TWEB
+9127964T3=TWEB
+912796TY5=TWEB
+912796XE4=TWEB
+912796TN9not in start_end_df
+912796TP4not in start_end_df
+912796TU3not in start_end_df
+912796TY5not in start_end_df
+912796UC1not in start_end_df
+912796XE4not in start_end_df
+9127962G3not in start_end_df
+9127962H1not in start_end_df
+9127962F5not in start_end_df
+9127962J7not in start_end_df
+9127962R9not in start_end_df
+9127962S7not in start_end_df
+9127962Q1not in start_end_df
+9127964G1not in start_end_df
+9127964H9not in start_end_df
+9127962Z1not in start_end_df
+9127963A5not in start_end_df
+9127962Y4not in start_end_df
+9127964K2not in start_end_df
+9127963B3not in start_end_df
+9127964Q9not in start_end_df
+9127964R7not in start_end_df
+9127963J6not in start_end_df
+9127964A4not in start_end_df
+9127963K3not in start_end_df
+9127963H0not in start_end_df
+9127964T3not in start_end_df
+9127963L1not in start_end_df
+9127965B1not in start_end_df
+9127963T4not in start_end_df
+9127963U1not in start_end_df
+9127963S6not in start_end_df
+9127963V9not in start_end_df
+9127963Z0not in start_end_df
+9127962T5not in start_end_df
+912796A58not in start_end_df
+9127963W7not in start_end_df
+9127964C0not in start_end_df
+9127964B2not in start_end_df
+912796A74not in start_end_df
+9127964D8not in start_end_df
+912796A82not in start_end_df
+9127964J5not in start_end_df
+912796B65not in start_end_df
+9127964F3not in start_end_df
+9127965D7not in start_end_df
+9127964M8not in start_end_df
+9127964L0not in start_end_df
+912796B81not in start_end_df
+912828ZG8=TWEB
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_stocks_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+AGG
+TIP
+GNMA.O
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_softs_grains_update_data.py 2020-09-15 
+2020-09-15 00:00:00
+contract listing not found: constructing list
+contract rules not found: constructing rules
+CCK2^2
+CCN2^2
+CCH2^2
+CCH1^2
+CCK1^2
+CCZ1^2
+CCU1^2
+CCZ0^2
+CCU0^2
+CCN1^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+CTN1^2
+CTV0^2
+CTH2^2
+CTH3^2
+CTN3^2
+CTN2^2
+CTV1^2
+CTZ0^2
+CTK2^2
+CTZ1^2
+CTZ2^2
+CTV2^2
+CTK1^2
+CTH1^2
+CTK3^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+KCU0^2
+KCH1^2
+KCH3^2
+KCK1^2
+KCZ1^2
+KCZ2^2
+KCZ0^2
+KCK2^2
+KCN2^2
+KCU2^2
+KCH2^2
+KCK3^2
+KCU1^2
+KCN3^2
+KCN1^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+CK2^2
+CZ2^2
+CZ3^2
+CN3^2
+CZ0^2
+CU2^2
+CZ1^2
+CH2^2
+CN2^2
+CN1^2
+CH1^2
+CU1^2
+CK1^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+SX2^2
+SQ1^2
+SF1^2
+SH2^2
+SU1^2
+SX0^2
+trying again
+SU2^2
+SQ2^2
+SF2^2
+SH1^2
+SK2^2
+SN2^2
+SN1^2
+SK1^2
+SX1^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+SBN2^2
+SBH2^2
+SBK1^2
+SBN3^2
+SBK2^2
+SBV0^2
+SBH1^2
+SBV2^2
+SBH3^2
+SBV1^2
+SBN1^2
+SBK3^2
+contract listing not found: constructing list
+contract rules not found: constructing rules
+WN2^2
+WH1^2
+WK2^2
+WK1^2
+WU2^2
+WZ0^2
+WZ2^2
+WZ1^2
+WU1^2
+WN1^2
+WH2^2
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python ogf_hdf_backup2.py 
+Beginning HDF backup and pruning . . .
+HDF source folder: D:\Users\orthogonal\Documents\Python Dev\shogun\shogun\database
+HDF source folder: D:\Users\orthogonal\Dropbox\HDF
+HDF backup folder: D:\Users\orthogonal\Dropbox\HDF Backup
+Today's date and time: 20200916_0402
+Copying D:\Users\orthogonal\Documents\Python Dev\shogun\shogun\database to D:\Users\orthogonal\Dropbox\HDF and overwriting destination contents . . .
+Creating backup of D:\Users\orthogonal\Dropbox\HDF . . .
+Backup created: Subfolder name 20200916_0402 in D:\Users\orthogonal\Dropbox\HDF Backup
+Deleting backups older than 1 week . . .
+20200907_2045 has been DELETED.
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python eu_rates_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['FBTS_Z20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python eu_equities_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14', '2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['FDAX_U20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python osl_equities_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14', '2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['OBX_U20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_rates_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14', '2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['ZF_Z20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_equities_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_vix_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14'], dtype='datetime64[ns, UTC]', freq=None)
+['VX_U20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_energy_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_currencies_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14', '2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['6J_Z20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_metals_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python uk_rates_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+DatetimeIndex(['2020-09-14', '2020-09-15'], dtype='datetime64[ns, UTC]', freq=None)
+['U_Z20']
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_ice_softs_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>python us_cme_grains_continuous_futures.py 2020-09-15 
+2020-09-15 00:00:00
+
+(algo) D:\Users\orthogonal\Documents\Python Dev>copy "log_update.txt"  "D:\Users\orthogonal\Dropbox\HDF\log_update.txt" 

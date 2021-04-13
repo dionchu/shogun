@@ -133,6 +133,20 @@ class Position(object):
             'amount': self.amount * dividend.dividend
         }
 
+    def earn_coupon(self, coupon):
+        """
+        Register the face value we held at this coupons's pay date so
+        that we can pay out the correct amount on the coupon's pay date.
+        """
+        self.dividend += self.amount * coupon
+
+        return {
+            'instrument': self.instrument,
+            'holding': self.amount,
+            'dividend': coupon,
+            'amount': self.amount * coupon
+        }
+
     def update(self, txn):
         if self.instrument != txn.instrument:
             raise Exception('updating position with txn for a '
@@ -250,16 +264,21 @@ class Strategy(object):
     def process_coupon(self, session):
         dt = session.strftime('%Y-%m-%d')
 
+        current_positions = [
+            pos.to_dict()
+            for instrument, pos in iteritems(self.positions)
+        ]
+
         fi_positions = [pos for pos in current_positions if pos['instrument'].__class.__name__ == 'FixedIncome' and pos['instrument'].coupon !=0]
         if len(fi_positions) > 0:
             for fi_position in fi_positions:
-                if fi_position.get_coupon(session) == False:
+                if fi_position['instrument'].get_coupon(dt) == False:
                     pass
                 else:
-                    div_owed = self.positions[instrument].earn_dividend(
-                        fi_position.get_coupon(session)/100
+                    div_owed = self.positions[fi_position['instrument']].earn_coupon(
+                        fi_position['instrument'].get_coupon(dt)/100
                     )
-                    self._processed_dividends[dt] = div_owed
+                    self._processed_dividends[session] = div_owed
 
     def refresh(self,session, bar_reader):
         self.realized_pnl = 0

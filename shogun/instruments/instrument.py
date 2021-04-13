@@ -433,9 +433,9 @@ class FixedIncome(Instrument):
         self.maturity_date = maturity_date
         self.period = period
         self.redemption = redemption
-        self.ql_bond_object = make_ql_bond(float(self.coupon)/100,
-                                                self.maturity_date.strftime("%Y-%m-%d"),
-                                                self.issue_date.strftime("%Y-%m-%d"))
+#        self.ql_bond_object = make_ql_bond(float(self.coupon)/100,
+#                                                self.maturity_date.strftime("%Y-%m-%d"),
+#                                                self.issue_date.strftime("%Y-%m-%d"))
     """
     period:
         Daily
@@ -461,7 +461,10 @@ class FixedIncome(Instrument):
         Get coupon payment on session, if any.
         """
         session = ql.DateParser.parseFormatted(session,'%Y-%m-%d')
-        coupon = [cflow for cflow in self.ql_bond_object.cashflows() if cflow.date() == session]
+        bond_object = make_ql_bond(float(self.coupon)/100,
+                                                self.maturity_date.strftime("%Y-%m-%d"),
+                                                self.issue_date.strftime("%Y-%m-%d"))
+        coupon = [cflow for cflow in bond_object.cashflows() if cflow.date() == session]
         if len(coupon) > 0:
             if coupon[0] == 0:
                 return(False)

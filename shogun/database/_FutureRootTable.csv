@@ -99,3 +99,5 @@ MP,Mexican Peso Futures,Mexican Peso,XCME,CME,XCME,FX,6,MX,USD,500000,0.00001,,1
 NE,New Zealand Dollar Futures,New Zealand Dollar,XCME,CME,XCME,FX,6,NZ,USD,100000,0.0001,,13:59,14:00,vwap,exch,1,Delivery,9:15,9:16,exch,9:15,last_trade
 MES,Micro E-mini S&P 500 Index Futures,S&P 500 Index,XCME,CME,XCME,EQD,5,US,USD,5,0.25,,15:14:30,15:15,vwap,exch,0,SOQ,9:30,9:30,exch,9:30,last_trade
 HO,NY Harbor ULSD Futures,42000 Gallons ULSD NY Harbor,XNYM,NYMEX,XNYM,ENERGY,3,US,USD,42000,0.0001,,14:28,14:30,vwap,exch,1,vwap,14:00,14:30,exch,14:30,last_trade
+VX,Cboe Volatility Index Futures,VIX,XCBF,CBOE,XCBF,,5,US,USD,1000,0.005,,15:15,15:15,last,exch,0,SOQ,8:30,8:30,exch,15:15,last_trade
+FEF,SGX TSI Iron Ore CFC China Index Futures,SGX TSI Iron Ore,XSES,SGX,XSES,METALS,4,CN,USD,100,0.01,,17:30,17:30,cspa,exch,0,TSI iron ore reference price average in expiring month,18:00,18:00,exch,18:00,last_trade

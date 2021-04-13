@@ -12,3 +12,10 @@ VGSH,Vanguard Short-Term Treasury,ETF,,XNCM,NASDAQ,XNCM,,1,US,USD,16:00,16:02,au
 NLY,"Annaly Capital Management, Inc.",REIT,,XNYS,NYSE,XNYS,,6,US,USD,16:00,16:02,auction,exch
 GNMA,iShares GNMA Bond ETF,ETF,,XNCM,NASDAQ,XNCM,,6,US,USD,16:00,16:02,auction,exch
 VMBS,Vanguard Mortgage-Backed Securities ETF,ETF,,XNCM,NASDAQ,XNCM,,6,US,USD,16:00,16:02,auction,exch
+VIXY,ProShares VIX Short-Term Futures,ETF,,XNYS,NYSE,XNYS,,9,US,USD,16:00,16:02,auction,exch
+AGG,iShares Core U.S. Aggregate Bond ETF,ETF,,XNYS,NYSE,XNYS,,6,US,USD,16:00,16:02,auction,exch
+GSG,iShares S&P GSCI Commodity-Indexed Trust,ETF,,XNCM,NASDAQ,XNCM,,4,US,USD,16:00,16:02,auction,exch
+XLK,SPDR Technology Select Sector,ETF,,XNCM,NASDAQ,XNCM,,5,US,USD,16:00,16:02,auction,exch
+SQQQ,ProShares UltraPro Short QQQ ETF,ETF,,XNCM,NASDAQ,XNCM,,5,US,USD,16:00,16:02,auction,exch
+QLD,ProShares Ultra QQQ,ETF,,XNCM,NASDAQ,XNCM,,5,US,USD,16:00,16:02,auction,exch
+TQQQ,ProShares UltraPro QQQ,ETF,,XNCM,NASDAQ,XNCM,,5,US,USD,16:00,16:02,auction,exch

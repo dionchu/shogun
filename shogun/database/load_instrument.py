@@ -251,10 +251,18 @@ def update_future(factory,root_symbol,dt,platform='RIC'):
     # for those that are new, make root chain and calculate query start date
     if missing_contracts.shape[0] != 0:
         missing_root_info_dict = factory.retrieve_root_info(root_symbol)
-        missing_root_chain_df = factory.make_root_chain(root_symbol,
-                                                        pd.Timestamp(missing_contracts.index[0], tz='UTC'),
-                                                        pd.Timestamp(missing_contracts.index[-1], tz='UTC'),
+        appended_data = []
+        for exp in missing_contracts.index:
+            sub_root_chain_df = factory.make_root_chain(root_symbol,
+                                                        pd.Timestamp(exp, tz='UTC'),
+                                                        pd.Timestamp(exp, tz='UTC'),
                                                         filter=False)
+            appended_data.append(sub_root_chain_df)
+            missing_root_chain_df = pd.concat(appended_data)
+#        missing_root_chain_df = factory.make_root_chain(root_symbol,
+#                                                        pd.Timestamp(missing_contracts.index[0], tz='UTC'),
+#                                                        pd.Timestamp(missing_contracts.index[-1], tz='UTC'),
+#                                                        filter=False)
 
         missing_root_chain_dict = missing_root_chain_df.set_index('platform_symbol').to_dict()
 
